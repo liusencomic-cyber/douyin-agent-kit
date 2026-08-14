@@ -1055,3 +1055,18 @@ class TestPromptInjection:
         assert reason == "judge_failed"
         assert mock_urlopen.call_count == 1
 
+
+# ── P3-3：except 简化 ───────────────────────────────────────
+
+class TestExceptSimplification:
+    """RED→GREEN: except (ImportError, Exception) 应简化为 except Exception。"""
+
+    def test_no_redundant_import_error_except(self):
+        REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(REPO_ROOT, "analyze_visual_needs.py"),
+                  encoding="utf-8") as f:
+            src = f.read()
+        assert "(ImportError, Exception)" not in src, (
+            "ImportError 是 Exception 子类，应简化为 except Exception"
+        )
+

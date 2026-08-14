@@ -1,0 +1,125 @@
+"""run_pipeline.sh / run_sync.sh 环境 wrapper 重构测试 (RED → GREEN)
+验证：
+- run_pipeline.sh 调用系统 python3 (/opt/homebrew/bin/python3)
+- 不设旧 uv PATH / PYTHONPATH
+- 有 HOME 兜底逻辑
+- preflight_check.sh 调用
+"""
+import os
+import re
+import subprocess
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+RUN_PIPELINE = ROOT / "run_pipeline.sh"
+RUN_SYNC = ROOT / "run_sync.sh"
+
+
+def _read_script(path):
+    return path.read_text(encoding="utf-8")
+
+
+class TestRunPipelineEnv:
+    """run_pipeline.sh 环境清理"""
+
+    def test_uses_system_python3(self):
+        """必须使用 /opt/homebrew/bin/python3（系统 3.14）"""
+        content = _read_script(RUN_PIPELINE)
+        # 至少出现一次 /opt/homebrew/bin/python3
+        assert "/opt/homebrew/bin/python3" in content, (
+            f"run_pipeline.sh 必须使用 /opt/homebrew/bin/python3\n内容:\n{content[:500]}"
+        )
+
+    def test_no_uv_path(self):
+        """不得包含旧 uv PATH"""
+        content = _read_script(RUN_PIPELINE)
+        assert ".local/share/uv/python" not in content, (
+            f"run_pipeline.sh 不得包含旧 uv PATH\n内容:\n{content[:500]}"
+        )
+
+    def test_no_pythonpath_injection(self):
+        """不得设置 PYTHONPATH"""
+        content = _read_script(RUN_PIPELINE)
+        # 允许注释中出现 PYTHONPATH 但 export 中不行
+        for line in content.split("\n"):
+            if "export" in line and "PYTHONPATH" in line:
+                pytest.fail(f"run_pipeline.sh 不得 export PYTHONPATH: {line.strip()}")
+
+    def test_home_fallback_present(self):
+        """必须有 HOME 兜底逻辑"""
+        content = _read_script(RUN_PIPELINE)
+        has_fallback = ("-d" in content and "HOME" in content and "Desktop" in content) or \
+                       ("HOME=" in content and "~" in content)
+        assert has_fallback, (
+            f"run_pipeline.sh 必须有 HOME 兜底逻辑\n内容:\n{content[:500]}"
+        )
+
+    def test_calls_preflight(self):
+        """必须调用 preflight_check.sh"""
+        content = _read_script(RUN_PIPELINE)
+        assert "preflight_check.sh" in content, (
+            f"run_pipeline.sh 必须调用 preflight_check.sh\n内容:\n{content[:500]}"
+        )
+
+    def test_no_kmp_duplicate_lib(self):
+        """不得设置 KMP_DUPLICATE_LIB_OK（mlx_whisper 不需要）"""
+        content = _read_script(RUN_PIPELINE)
+        # KMP 是 Intel MKL 的环境变量，mlx_whisper 用 Metal/GPU 不需要
+        if "KMP_DUPLICATE_LIB_OK" in content:
+            # 如果在注释中则可以接受
+            for line in content.split("\n"):
+                stripped = line.strip()
+                if "KMP_DUPLICATE_LIB_OK" in stripped and not stripped.startswith("#"):
+                    pytest.fail(
+                        f"run_pipeline.sh 不应设置 KMP_DUPLICATE_LIB_OK（mlx_whisper 不需要 Intel MKL）: {line.strip()}"
+                    )
+
+    def test_passes_args_through(self):
+        """必须透传 $@ 参数"""
+        content = _read_script(RUN_PIPELINE)
+        assert '"$@"' in content, (
+            f"run_pipeline.sh 必须透传 $@ 参数\n内容:\n{content[:500]}"
+        )
+
+
+class TestRunSyncEnv:
+    """run_sync.sh 环境修复"""
+
+    def test_no_uv_path(self):
+        """不得包含旧 uv PATH"""
+        content = _read_script(RUN_SYNC)
+        assert ".local/share/uv/python" not in content, (
+            f"run_sync.sh 不得包含旧 uv PATH\n内容:\n{content[:500]}"
+        )
+
+    def test_no_pythonpath_injection(self):
+        """不得设置 PYTHONPATH"""
+        content = _read_script(RUN_SYNC)
+        for line in content.split("\n"):
+            if "export" in line and "PYTHONPATH" in line:
+                pytest.fail(f"run_sync.sh 不得 export PYTHONPATH: {line.strip()}")
+
+    def test_home_fallback_present(self):
+        """必须有 HOME 兜底逻辑"""
+        content = _read_script(RUN_SYNC)
+        has_fallback = ("-d" in content and "HOME" in content and "Desktop" in content) or \
+                       ("HOME=" in content and "~" in content)
+        assert has_fallback, (
+            f"run_sync.sh 必须有 HOME 兜底逻辑\n内容:\n{content[:500]}"
+        )
+
+    def test_uses_venv_python_directly(self):
+        """必须直接调用 venv/bin/python3，不通过 PATH+PYTHONPATH 组合"""
+        content = _read_script(RUN_SYNC)
+        # 直接路径调用 venv python
+        assert "venv/bin/python3" in content, (
+            f"run_sync.sh 必须直接调用 venv/bin/python3\n内容:\n{content[:500]}"
+        )
+
+    def test_calls_run_py_with_config(self):
+        """必须调用 run.py -c config.yml"""
+        content = _read_script(RUN_SYNC)
+        assert "run.py" in content, "run_sync.sh 必须调用 run.py"
+        assert "config" in content.lower(), "run_sync.sh 必须使用 config"

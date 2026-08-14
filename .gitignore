@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+venv/
+.venv/
+*.db
+processed*.json
+archive_config.json
+config/cookies.json
+.reasonix/
+Downloaded/

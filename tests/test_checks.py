@@ -11,6 +11,54 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO_ROOT)
 
 
+class TestDownloaderConditional:
+    """P1-2: douyin-downloader 检查按 features 条件化，未启用不阻断。
+
+    现状 check_downloader 缺失即 MISSING → exit 1；但单条提取（默认功能）
+    用 scrapling 版 douyin_download.py，不需要 douyin-downloader/。
+    """
+
+    def test_warn_when_only_single_extract(self, tmp_path, monkeypatch):
+        """仅启用单条提取时，缺下载器为 WARN 而非 MISSING。"""
+        import setup.checks as checks
+        monkeypatch.delenv("DOUYIN_SYNC_DIR", raising=False)
+        monkeypatch.setattr(checks, "REPO_ROOT", str(tmp_path))
+        cfg = {"features": {"single_extract": True,
+                            "favorites_sync": False, "creator_distill": False}}
+        assert checks.check_downloader(cfg)[1] == "WARN"
+
+    def test_missing_when_favorites_sync_enabled(self, tmp_path, monkeypatch):
+        """启用 favorites_sync 时缺下载器仍为 MISSING（阻断）。"""
+        import setup.checks as checks
+        monkeypatch.delenv("DOUYIN_SYNC_DIR", raising=False)
+        monkeypatch.setattr(checks, "REPO_ROOT", str(tmp_path))
+        cfg = {"features": {"favorites_sync": True, "creator_distill": False}}
+        assert checks.check_downloader(cfg)[1] == "MISSING"
+
+    def test_warn_without_config(self, tmp_path, monkeypatch):
+        """无配置（默认检查）时缺下载器不阻断（WARN）。"""
+        import setup.checks as checks
+        monkeypatch.delenv("DOUYIN_SYNC_DIR", raising=False)
+        monkeypatch.setattr(checks, "REPO_ROOT", str(tmp_path))
+        assert checks.check_downloader(None)[1] == "WARN"
+
+    def test_exit_zero_when_downloader_missing_and_not_needed(self, tmp_path, monkeypatch):
+        """组合验证：无配置缺下载器 → exit_code 0。"""
+        import setup.checks as checks
+        monkeypatch.delenv("DOUYIN_SYNC_DIR", raising=False)
+        monkeypatch.setattr(checks, "REPO_ROOT", str(tmp_path))
+        results = [checks.check_downloader(None), ("ffmpeg", "OK", "")]
+        assert checks.exit_code(results) == 0
+
+    def test_ok_when_downloader_present(self, tmp_path, monkeypatch):
+        """下载器存在时仍为 OK。"""
+        import setup.checks as checks
+        monkeypatch.delenv("DOUYIN_SYNC_DIR", raising=False)
+        d = tmp_path / "douyin-downloader"; d.mkdir()
+        monkeypatch.setattr(checks, "REPO_ROOT", str(tmp_path))
+        assert checks.check_downloader(None)[1] == "OK"
+
+
 def make_check(name, status, detail=""):
     return (name, status, detail)
 

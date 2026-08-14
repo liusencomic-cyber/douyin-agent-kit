@@ -76,7 +76,77 @@ class TestMlxWhisperMigration:
             assert "vad_filter" not in m.call_args.kwargs, "mlx_whisper does not support vad_filter"
 
 
-# ── 功能回归测试 ─────────────────────────────────────────────
+# ── 输出覆盖写（P0-3）──────────────────────────────────────
+
+class TestOutputOverwrite:
+    """RED→GREEN: --out 默认覆盖写，--append 才追加（防跨运行污染）。
+
+    现状 append 追加写：--keep-work 保留目录后二次运行会把旧条目留在
+    out 里，analyze_visual_needs 解析出多条、transcribe_single 只取
+    items[0] → 分析到旧视频文本。
+    """
+
+    def test_second_run_overwrites_old_entries(self, tmp_path):
+        """默认（无 --append）第二次运行不保留旧条目。"""
+        src = tmp_path / "src"; src.mkdir()
+        make_video_dir(str(src), "2026-07-01", "旧视频", "10101010101")
+        out = tmp_path / "out.txt"
+        processed = tmp_path / "p.json"
+
+        mock_result = {"text": "旧内容", "segments": [
+            {"id": 0, "start": 0.0, "end": 1.0, "text": "旧内容",
+             "tokens": [], "words": []}
+        ], "language": "zh"}
+        with mock.patch("mlx_whisper.transcribe", return_value=mock_result):
+            run_main(str(src), str(out), str(processed))
+
+        # 第二次运行：同一 out 文件，processed 已含旧 id（src2 只有新条目）
+        src2 = tmp_path / "src2"; src2.mkdir()
+        make_video_dir(str(src2), "2026-07-02", "新视频", "20202020202")
+
+        mock_result2 = {"text": "新内容", "segments": [
+            {"id": 0, "start": 0.0, "end": 1.0, "text": "新内容",
+             "tokens": [], "words": []}
+        ], "language": "zh"}
+        with mock.patch("mlx_whisper.transcribe", return_value=mock_result2):
+            run_main(str(src2), str(out), str(processed))
+
+        content = out.read_text(encoding="utf-8")
+        assert "旧视频" not in content, "默认覆盖写：旧条目不应残留"
+        assert "旧内容" not in content, "默认覆盖写：旧转录内容不应残留"
+        assert "新视频" in content
+        assert "新内容" in content
+
+    def test_append_flag_keeps_old_entries(self, tmp_path):
+        """显式 --append 时旧条目保留。"""
+        import transcribe_only
+        src = tmp_path / "src"; src.mkdir()
+        make_video_dir(str(src), "2026-07-01", "条目A", "30303030303")
+        out = tmp_path / "out.txt"
+        processed = tmp_path / "p.json"
+        mock_result = {"text": "内容A", "segments": [
+            {"id": 0, "start": 0.0, "end": 1.0, "text": "内容A",
+             "tokens": [], "words": []}
+        ], "language": "zh"}
+        with mock.patch("mlx_whisper.transcribe", return_value=mock_result):
+            run_main(str(src), str(out), str(processed))
+
+        src2 = tmp_path / "src2"; src2.mkdir()
+        make_video_dir(str(src2), "2026-07-02", "条目B", "40404040404")
+        mock_result2 = {"text": "内容B", "segments": [
+            {"id": 0, "start": 0.0, "end": 1.0, "text": "内容B",
+             "tokens": [], "words": []}
+        ], "language": "zh"}
+        with mock.patch("mlx_whisper.transcribe", return_value=mock_result2):
+            with mock.patch.object(sys, "argv", [
+                "transcribe_only.py", "--src-dir", str(src2),
+                "--out", str(out), "--processed", str(processed), "--append",
+            ]):
+                transcribe_only.main()
+
+        content = out.read_text(encoding="utf-8")
+        assert "条目A" in content and "条目B" in content, \
+            "--append 时新旧条目都应保留"
 
 class TestCliAndOutput:
 

@@ -17,15 +17,29 @@ def log(msg):
 def find_video_dir(video_base, item_title):
     """在 video_base 下匹配条目目录，返回 mp4 路径或 None。
     条目标题格式: YYYY-MM-DD_标题，目录格式: YYYY-MM-DD_标题_aweme_id。
+    标题非法字符处理与 transcribe_single.sanitize_title 对齐；
+    同名前缀歧义时精确匹配（目录标题部分完全一致）优先。
     """
     if not os.path.isdir(video_base):
         return None
-    for folder in sorted(os.listdir(video_base)):
+    clean = re.sub(r'[/:?*<>|\\\t\n\r]+', '_', item_title).strip()
+    folders = sorted(os.listdir(video_base))
+    # 精确匹配优先：目录 日期_标题_aweme_id 的标题部分完全一致
+    for folder in folders:
         fpath = os.path.join(video_base, folder)
         if not os.path.isdir(fpath):
             continue
-        # 目录名以条目标题开头（日期_标题_aweme_id）
-        if folder.startswith(item_title):
+        m = re.match(r"(.+)_(\d{10,})$", folder)
+        if m and m.group(1) == clean:
+            mp4s = [f for f in os.listdir(fpath) if f.endswith(".mp4")]
+            if mp4s:
+                return os.path.join(fpath, mp4s[0])
+    # 前缀匹配兜底（原行为）
+    for folder in folders:
+        fpath = os.path.join(video_base, folder)
+        if not os.path.isdir(fpath):
+            continue
+        if folder.startswith(clean):
             mp4s = [f for f in os.listdir(fpath) if f.endswith(".mp4")]
             if mp4s:
                 return os.path.join(fpath, mp4s[0])

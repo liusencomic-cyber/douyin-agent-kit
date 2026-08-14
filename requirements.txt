@@ -1,4 +1,4 @@
-# 依赖清单（Python 3.14）
+# 依赖清单（Python 3.10-3.13）
 mlx>=0.32.0
 mlx-whisper>=0.4.3
 filelock

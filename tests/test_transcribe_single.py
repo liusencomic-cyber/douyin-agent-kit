@@ -429,6 +429,51 @@ class TestWorkDirSafety:
                 shutil.rmtree(work_dir, ignore_errors=True)
 
 
+# ── 自定义 work-dir 降级（P3-8）─────────────────────────────
+
+class TestCustomWorkDirGraceful:
+    """RED→GREEN: 自定义 --work-dir 不以 douyin/tmp 开头时降级保留，不 raise。
+
+    现状 cleanup_work_dir 对任何不安全目录抛 ValueError → main() finally 中断；
+    但危险路径（/、~、仓库根）仍须拒绝（见 TestWorkDirSafety）。
+    """
+
+    def test_cleanup_warns_and_keeps_non_prefixed_tmp_dir(self, capsys):
+        """/tmp 下非 douyin/tmp 前缀目录：警告并保留，不 raise。"""
+        from transcribe_single import cleanup_work_dir
+        work_dir = f"/tmp/custom_work_{os.getpid()}"
+        os.makedirs(work_dir, exist_ok=True)
+        try:
+            cleanup_work_dir(work_dir, keep=False)  # 不应 raise
+            assert os.path.exists(work_dir), "前缀不匹配时应保留目录"
+            out = capsys.readouterr().out
+            assert "保留" in out or "不删除" in out
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
+
+    def test_main_custom_work_dir_does_not_crash(self, tmp_path, capsys):
+        """自定义 --work-dir（非 douyin/tmp 前缀）时 main() 清理不中断。"""
+        import transcribe_single
+        mp4_path = str(tmp_path / "douyin_6666666666666666666.mp4")
+        make_dummy_mp4(mp4_path)
+        work_dir = f"/tmp/custom_work_main_{os.getpid()}"
+        os.makedirs(work_dir, exist_ok=True)
+        out_dir = str(tmp_path / "out")
+        try:
+            with mock.patch("subprocess.run") as mock_run:
+                mock_run.return_value = mock.MagicMock(returncode=0)
+                with mock.patch.object(sys, "argv", [
+                    "transcribe_single.py", "--mp4", mp4_path,
+                    "--title", "自定义目录", "--date", "2026-07-01",
+                    "--work-dir", work_dir, "--out-dir", out_dir,
+                    "--skip-judge",
+                ]):
+                    transcribe_single.main()  # 不应 SystemExit/ValueError
+            assert os.path.exists(work_dir), "前缀不匹配的 work_dir 应保留"
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
+
+
 # ── 输出持久化（P0-2）──────────────────────────────────────
 
 class TestPersistOutputs:

@@ -11,6 +11,12 @@ config/cookies.json
 .reasonix/
 Downloaded/
 
+# 上游 clone 到本仓库子目录（README 指引）
+douyin-downloader/
+
+# qr_login.py 写入的 douyin-downloader/config.yml、博主蒸馏的 config_<博主>.yml
+config*.yml
+
 # 设置向导生成的用户配置（不入库）
 douyin_agent_kit.config.yaml
 AGENT_SETUP.md

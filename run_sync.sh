@@ -12,6 +12,9 @@ if [ ! -d "$HOME/Desktop" ] && [ -n "${REAL_HOME:-}" ]; then
     export HOME
 fi
 
-PY="$HOME/Desktop/douyin-sync/venv/bin/python3"
-cd "$HOME/Desktop/douyin-sync/douyin-downloader"
+# sync 目录：优先环境变量 DOUYIN_SYNC_DIR，否则脚本所在目录（可移植，不硬编码本机路径）
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SYNC_DIR="${DOUYIN_SYNC_DIR:-$SCRIPT_DIR}"
+PY="${PYTHON:-$SYNC_DIR/venv/bin/python3}"
+cd "$SYNC_DIR/douyin-downloader"
 exec "$PY" run.py -c config.yml

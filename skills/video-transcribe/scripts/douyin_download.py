@@ -20,7 +20,8 @@ import sys, os, re, subprocess, base64, json
 from scrapling import DynamicFetcher, StealthyFetcher
 
 INPUT = sys.argv[1] if len(sys.argv) > 1 else None
-PROXY = "http://127.0.0.1:7897"
+# 代理从环境变量读（未设置=直连）；不硬编码本机代理端口
+PROXY = os.environ.get("DOUYIN_PROXY") or os.environ.get("HTTPS_PROXY") or ""
 
 if not INPUT:
     print("用法: python3 douyin_download.py <视频/图文ID或短链URL>")
@@ -329,13 +330,13 @@ strategies = [
         "https://www.douyin.com/", headless=True, timeout=120000, page_action=action_fn)),
     ("DynamicFetcher 代理", lambda: DynamicFetcher.fetch(
         "https://www.douyin.com/", headless=True, timeout=120000,
-        proxy={"server": PROXY}, page_action=action_fn)),
+        proxy={"server": PROXY} if PROXY else None, page_action=action_fn)),
     ("StealthyFetcher 直连", lambda: StealthyFetcher.fetch(
         "https://www.douyin.com/", headless=True, timeout=120000,
         solve_cloudflare=True, page_action=action_fn)),
     ("StealthyFetcher 代理", lambda: StealthyFetcher.fetch(
         "https://www.douyin.com/", headless=True, timeout=120000,
-        solve_cloudflare=True, proxy={"server": PROXY}, page_action=action_fn)),
+        solve_cloudflare=True, proxy={"server": PROXY} if PROXY else None, page_action=action_fn)),
 ]
 
 for name, fn in strategies:

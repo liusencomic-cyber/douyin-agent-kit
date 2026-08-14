@@ -16,6 +16,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 "$SCRIPT_DIR/preflight_check.sh" || exit 1
 
-PY=/opt/homebrew/bin/python3
-cd "$HOME/Desktop/douyin-sync"
+# sync 目录：优先环境变量 DOUYIN_SYNC_DIR，否则脚本所在目录（可移植，不硬编码本机路径）
+SYNC_DIR="${DOUYIN_SYNC_DIR:-$SCRIPT_DIR}"
+PY="${PYTHON:-python3}"
+cd "$SYNC_DIR"
 exec "$PY" transcribe_archive.py "$@"

@@ -152,6 +152,28 @@ def run_pipeline(work_dir, video_dir, mp4_path, title, date, aweme_id, skip_judg
     return result
 
 
+def persist_outputs(work_dir, out_dir, result):
+    """把 work_dir 中的转录/判断/帧产物复制到持久 out-dir，返回更新路径后的 result。
+
+    work_dir 是中间目录（默认会被清理）；out_dir 是产物归宿。
+    仅复制存在的产物，缺文件不报错。
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    for fname in ("transcripts.txt", "needs.json"):
+        src = os.path.join(work_dir, fname)
+        if os.path.isfile(src):
+            shutil.copy2(src, os.path.join(out_dir, fname))
+    frames_src = os.path.join(work_dir, "frames")
+    frames_dst = os.path.join(out_dir, "frames")
+    if os.path.isdir(frames_src):
+        if os.path.isdir(frames_dst):
+            shutil.rmtree(frames_dst)
+        shutil.copytree(frames_src, frames_dst)
+        result["frames_dir"] = frames_dst
+    result["transcript_path"] = os.path.join(out_dir, "transcripts.txt")
+    return result
+
+
 def print_summary(result):
     """输出汇总信息到 stdout。"""
     print("\n" + "=" * 60, flush=True)
@@ -233,6 +255,8 @@ def parse_args():
     ap.add_argument("--skip-judge", action="store_true", help="跳过语义判断和截帧，只转录")
     ap.add_argument("--fps", type=float, default=2, help="定向截帧帧率（默认2）")
     ap.add_argument("--keep-work", action="store_true", help="保留工作目录不清理")
+    ap.add_argument("--out-dir", default=os.path.join(_SCRIPT_DIR, "output"),
+                    help="持久产物输出目录（默认仓库根 output/）")
     return ap.parse_args()
 
 
@@ -280,7 +304,10 @@ def main():
             fps=args.fps,
         )
 
-        # 3. 输出汇总
+        # 3. 产物复制到持久 out-dir（work_dir 默认会被清理）
+        result = persist_outputs(args.work_dir, args.out_dir, result)
+
+        # 4. 输出汇总（打印持久路径）
         print_summary(result)
 
     except subprocess.CalledProcessError as e:
@@ -292,7 +319,7 @@ def main():
         traceback.print_exc()
         sys.exit(1)
     finally:
-        # 4. 清理
+        # 5. 清理中间目录（产物已复制到 out-dir）
         cleanup_work_dir(args.work_dir, keep=args.keep_work)
 
 

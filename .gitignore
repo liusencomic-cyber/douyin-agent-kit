@@ -17,6 +17,9 @@ douyin-downloader/
 # qr_login.py 写入的 douyin-downloader/config.yml、博主蒸馏的 config_<博主>.yml
 config*.yml
 
+# transcribe_single.py 默认持久产物目录
+output/
+
 # 设置向导生成的用户配置（不入库）
 douyin_agent_kit.config.yaml
 AGENT_SETUP.md

@@ -498,14 +498,16 @@ class TestPersistOutputs:
                     pass
 
         # out-dir 产物在（转录/判断/帧）
-        assert (out_dir / "transcripts.txt").exists(), "转录产物应落 out-dir"
-        assert (out_dir / "needs.json").exists(), "判断产物应落 out-dir"
-        assert (out_dir / "frames" / "f1.jpg").exists(), "帧产物应落 out-dir"
+        assert os.path.exists(os.path.join(out_dir, "transcripts.txt")), \
+            "转录产物应落 out-dir"
+        assert os.path.exists(os.path.join(out_dir, "needs.json")), "判断产物应落 out-dir"
+        assert os.path.exists(os.path.join(out_dir, "frames", "f1.jpg")), \
+            "帧产物应落 out-dir"
         # work_dir 被清理
         assert not os.path.exists(work_dir), "work_dir 应被清理"
         # 汇总打印的是持久路径
         captured = capsys.readouterr().out
-        assert str(out_dir / "transcripts.txt") in captured, \
+        assert os.path.join(out_dir, "transcripts.txt") in captured, \
             "汇总应打印持久化后的转录路径"
 
     def test_default_out_dir_is_repo_output(self):

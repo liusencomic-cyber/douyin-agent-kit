@@ -201,16 +201,20 @@ def print_summary(result):
 def cleanup_work_dir(work_dir, keep=False):
     """清理工作目录。keep=True 时保留。
 
-    删除前做安全边界校验：仅允许仓库内子目录或系统临时目录（~/ /tmp）下、
-    目录名以 douyin/tmp 开头的工作目录；危险路径（/、~、仓库根等）
-    抛 ValueError 拒绝删除并保留目录，绝不 rmtree。
+    删除前做安全边界校验：
+    - 危险路径（/、~、仓库根等）抛 ValueError 拒绝删除并保留目录，绝不 rmtree；
+    - 目录名不以 douyin/tmp 开头的自定义目录：警告并保留（不 rmtree），
+      不 raise，保证运行不因清理失败崩溃。
     """
     if keep:
         log(f"保留工作目录: {work_dir}")
         return
-    if not _is_safe_work_dir(work_dir):
+    if _is_dangerous_work_dir(work_dir):
         log(f"⚠️ 拒绝清理不安全的工作目录（已保留）: {work_dir}")
         raise ValueError(f"拒绝删除不安全的工作目录: {work_dir}")
+    if not os.path.basename(os.path.realpath(work_dir)).startswith(("douyin", "tmp")):
+        log(f"⚠️ 工作目录名不以 douyin/tmp 开头，已保留（不删除）: {work_dir}")
+        return
     if os.path.isdir(work_dir):
         try:
             shutil.rmtree(work_dir)
@@ -221,6 +225,21 @@ def cleanup_work_dir(work_dir, keep=False):
 
 # 允许的工作目录安全父路径：用户主目录（仓库通常在其下）、系统临时目录
 _SAFE_PARENTS = (os.path.expanduser("~"), "/tmp", "/private/tmp")
+
+
+def _is_dangerous_work_dir(work_dir):
+    """危险路径判定：等于仓库根、或不在安全父目录内（如 /、~ 自身）。
+
+    前缀不匹配 douyin/tmp 的普通自定义目录不属于危险路径（降级保留即可）。
+    """
+    real = os.path.realpath(work_dir)
+    repo_root = os.path.realpath(_SCRIPT_DIR)
+    if real == repo_root:
+        return True  # 仓库根本身禁止删除
+    parents = _SAFE_PARENTS + (repo_root,)
+    return not any(
+        real.startswith(os.path.realpath(p) + os.sep) for p in parents
+    )
 
 
 def _is_safe_work_dir(work_dir):

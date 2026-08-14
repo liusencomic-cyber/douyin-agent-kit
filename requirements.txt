@@ -5,7 +5,7 @@ filelock
 scipy
 packaging
 json5
-pyyaml            # 配置 douyin_skills.config.yaml 解析（scripts/dy_config.py）
+pyyaml            # 配置 douyin_agent_kit.config.yaml 解析（scripts/dy_config.py）
 
 # 可选：测试
 pytest

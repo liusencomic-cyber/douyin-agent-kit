@@ -49,7 +49,7 @@ WHISPER_MODEL = "mlx-community/whisper-large-v3-turbo"
 
 
 def select_asr_engine():
-    """ASR 引擎分发点：返回当前 provider 名（来自 douyin_skills.config.yaml）。
+    """ASR 引擎分发点：返回当前 provider 名（来自 douyin_agent_kit.config.yaml）。
 
     配置不可读/未配置时回落默认 mlx-whisper。其他 provider（faster-whisper /
     whisper.cpp / external-command / none）为接口预留，未完整实现。
@@ -67,7 +67,7 @@ def ensure_asr_engine_supported():
     if engine != "mlx-whisper":
         raise NotImplementedError(
             f"ASR provider '{engine}' 尚未实现完整转录：当前仅支持 mlx-whisper。\n"
-            f"可在 douyin_skills.config.yaml 的 asr.provider 选择: "
+            f"可在 douyin_agent_kit.config.yaml 的 asr.provider 选择: "
             f"mlx-whisper / faster-whisper / whisper.cpp / external-command / none"
         )
     return engine

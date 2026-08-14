@@ -4,7 +4,7 @@
 通用能力契约见 [adapter-contract.md](adapter-contract.md)。
 
 若你的 Agent 不在 `agents/` 单独成文，按本文接入即可；设置向导
-（`setup/setup_douyin_skills.py`）选择 `agent: generic` 或 `claude-code` / `codex`
+（`setup/setup_douyin_agent_kit.py`）选择 `agent: generic` 或 `claude-code` / `codex`
 时生成的 AGENT_SETUP.md 也指向本文。
 
 ## 视觉调用

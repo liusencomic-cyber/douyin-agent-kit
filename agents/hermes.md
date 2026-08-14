@@ -1,6 +1,6 @@
 # Hermes 接入说明
 
-本文件说明 Hermes 如何接入 douyin-skills。通用能力契约见
+本文件说明 Hermes 如何接入 douyin-agent-kit。通用能力契约见
 [adapter-contract.md](adapter-contract.md)；本文只写 Hermes 的具体做法。
 
 ## 视觉调用

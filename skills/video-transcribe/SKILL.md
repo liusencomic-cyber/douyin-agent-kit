@@ -8,7 +8,7 @@ trigger: 用户发送抖音链接（含 douyin.com、iesdouyin.com、v.douyin.co
 > **Agent 无关声明**：本技能与具体 Agent 解耦，可在 Hermes / OpenClaw / WorkBuddy /
 > Claude Code / Codex / 任意本地 Agent 上运行。文中提到的 `vision_analyze` 等工具名
 > 仅为示例：**如你的 Agent 无此能力，请按 `agents/adapter-contract.md` 适配，视觉/OCR
-> 走 `douyin_skills.config.yaml` 的 `vision.ocr_provider` / `vision.fallback_ocr`**。
+> 走 `douyin_agent_kit.config.yaml` 的 `vision.ocr_provider` / `vision.fallback_ocr`**。
 > 各 Agent 接入方式见 `agents/<你的agent>.md`（设置向导生成的 `AGENT_SETUP.md` 会指向对应文档）。
 
 # 抖音内容提取与智能归档

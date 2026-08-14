@@ -1,4 +1,4 @@
-# douyin-skills
+# douyin-agent-kit
 
 抖音内容提取与博主蒸馏的 **Agent 无关** 技能集：**GPU 转录 + 智能画面判断 + 定向截帧 + 博主蒸馏报告**。
 适配 Hermes / OpenClaw / WorkBuddy / Claude Code / Codex / 任意本地 Agent —— 不绑定任何单一 Agent。
@@ -15,22 +15,22 @@
 ### 1. Clone
 
 ```bash
-git clone <本仓库地址> douyin-skills && cd douyin-skills
+git clone <本仓库地址> douyin-agent-kit && cd douyin-agent-kit
 ```
 
 ### 2. 运行设置向导
 
 ```bash
 # 交互式（逐项选择 Agent / 机器类型 / ASR / Vision / 功能 / 归档）
-python3 setup/setup_douyin_skills.py
+python3 setup/setup_douyin_agent_kit.py
 
 # 或非交互（参数注入，供无人值守/测试）
-python3 setup/setup_douyin_skills.py --non-interactive \
+python3 setup/setup_douyin_agent_kit.py --non-interactive \
     --agent hermes --machine apple-silicon
 ```
 
 向导生成：
-- `douyin_skills.config.yaml` — 统一配置（ASR / Vision 可配置开口）
+- `douyin_agent_kit.config.yaml` — 统一配置（ASR / Vision 可配置开口）
 - `AGENT_SETUP.md` — 按所选 Agent 生成的接入说明
 - `archive_config.json` — 启用 Obsidian 归档时生成
 
@@ -66,8 +66,8 @@ python3 setup/checks.py
 
 ## 配置
 
-- `douyin_skills.config.yaml`：ASR / Vision / 归档 / 功能开关（结构定义见 `config.schema.json`，
-  中文注释示例见 `douyin_skills.config.example.yaml`；也可直接跑向导生成）
+- `douyin_agent_kit.config.yaml`：ASR / Vision / 归档 / 功能开关（结构定义见 `config.schema.json`，
+  中文注释示例见 `douyin_agent_kit.config.example.yaml`；也可直接跑向导生成）
 - 工作目录：环境变量 `DOUYIN_SYNC_DIR` 覆盖，未设置时推断为脚本所在目录（无本机硬编码路径）
 - 语义判断：`vision.judge_provider`（默认 ollama）+ `vision.judge_model`（默认 qwen2.5:7b）、
   `vision.max_chars`（超长输入截断）、`vision.verify_rounds`（双重确认）

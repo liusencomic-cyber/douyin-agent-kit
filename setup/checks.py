@@ -8,7 +8,7 @@
   MISSING 必需项缺失 → 汇总后 exit 1
 
 用法:
-  python3 setup/checks.py [--config douyin_skills.config.yaml]
+  python3 setup/checks.py [--config douyin_agent_kit.config.yaml]
 """
 import argparse
 import importlib.util
@@ -167,15 +167,15 @@ def exit_code(results):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="douyin-skills 环境检查")
+    ap = argparse.ArgumentParser(description="douyin-agent-kit 环境检查")
     ap.add_argument("--config", default=None,
-                    help="douyin_skills.config.yaml 路径（条件检查项使用）")
+                    help="douyin_agent_kit.config.yaml 路径（条件检查项使用）")
     # parse_known_args：容忍被其它进程以额外参数调用（如 pytest 环境）
     args, _ = ap.parse_known_args()
     results = run_checks(config_path=args.config)
     ok, warn, missing = summarize(results)
     print("=" * 46)
-    print("douyin-skills 环境检查报告")
+    print("douyin-agent-kit 环境检查报告")
     print("=" * 46)
     for name, status, detail in results:
         print(f"  [{status:<7}] {name}: {detail}")

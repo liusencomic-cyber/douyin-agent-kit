@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""设置向导：为任意本地 Agent 生成 douyin-skills 配置。
+"""设置向导：为任意本地 Agent 生成 douyin-agent-kit 配置。
 
 交互式（默认）由 input() 驱动；非交互式用 --non-interactive + 参数注入（便于测试/无人值守）。
 
 生成物（写到 --wizard-dir，默认仓库根）:
-  douyin_skills.config.yaml   统一配置（ASR/Vision 可配置开口）
+  douyin_agent_kit.config.yaml   统一配置（ASR/Vision 可配置开口）
   archive_config.json         归档配置（启用归档时）
   AGENT_SETUP.md              按所选 Agent 生成的接入说明
 
 结束时自动运行 python setup/checks.py 输出环境检查报告（--skip-checks 跳过）。
 
 用法:
-  python3 setup/setup_douyin_skills.py                          # 交互式
-  python3 setup/setup_douyin_skills.py --non-interactive \
+  python3 setup/setup_douyin_agent_kit.py                          # 交互式
+  python3 setup/setup_douyin_agent_kit.py --non-interactive \
       --agent hermes --machine apple-silicon --skip-checks      # 非交互
 """
 import argparse
@@ -169,7 +169,7 @@ def build_config_noninteractive(args):
 
 def build_config_interactive(args):
     """交互：input() 逐项询问（每步编号选项）。"""
-    print("\n===== douyin-skills 设置向导（交互模式）=====")
+    print("\n===== douyin-agent-kit 设置向导（交互模式）=====")
     print("Ctrl-C 随时取消；直接回车使用默认值。")
 
     agent = ask("1) 你的 Agent 类型", AGENT_CHOICES, default="generic")
@@ -225,12 +225,12 @@ def generate_agent_setup_md(agent, cfg):
         if vision["ocr_provider"] == "agent-vision"
         else f"本地/远端 OCR 方案: {vision['ocr_provider']}"
     )
-    return f"""# AGENT_SETUP —— douyin-skills 接入说明（{agent}）
+    return f"""# AGENT_SETUP —— douyin-agent-kit 接入说明（{agent}）
 
 本文件由设置向导根据你的选择生成，是 {agent} 接入本仓库的操作手册。
 能力契约与通用约定见 `agents/adapter-contract.md`；本 Agent 的详细适配见 `agents/{doc_name}.md`。
 
-## 1. 当前环境（来自 douyin_skills.config.yaml）
+## 1. 当前环境（来自 douyin_agent_kit.config.yaml）
 
 | 项目 | 值 |
 |---|---|
@@ -286,7 +286,7 @@ def run_wizard(args):
 
     # 校验：复用 dy_config 的枚举校验（非法值抛 ValueError）
     from scripts.dy_config import load_config
-    out_path = args.config_out or os.path.join(REPO_ROOT, "douyin_skills.config.yaml")
+    out_path = args.config_out or os.path.join(REPO_ROOT, "douyin_agent_kit.config.yaml")
     write_yaml(cfg, out_path)
     load_config(out_path)  # 校验通过才继续
 
@@ -316,7 +316,7 @@ def run_wizard(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="douyin-skills 设置向导")
+    ap = argparse.ArgumentParser(description="douyin-agent-kit 设置向导")
     ap.add_argument("--non-interactive", action="store_true",
                     help="非交互模式（参数注入，供测试/无人值守）")
     ap.add_argument("--agent", choices=AGENT_CHOICES, default=None,
@@ -341,7 +341,7 @@ def main():
     ap.add_argument("--vault-inbox", default=None,
                     help="Obsidian Vault 收件箱路径（提供即启用归档）")
     ap.add_argument("--config-out", default=None,
-                    help="配置输出路径（默认仓库根 douyin_skills.config.yaml）")
+                    help="配置输出路径（默认仓库根 douyin_agent_kit.config.yaml）")
     ap.add_argument("--wizard-dir", default=None,
                     help="产物目录（默认仓库根；AGENT_SETUP.md/archive_config.json 写此处）")
     ap.add_argument("--skip-checks", action="store_true",

@@ -2,7 +2,7 @@
 
 用法:
     from scripts.dy_config import load_config, get_asr, get_vision
-    cfg = load_config()          # 读仓库根 douyin_skills.config.yaml；缺失时返回全默认 + 警告
+    cfg = load_config()          # 读仓库根 douyin_agent_kit.config.yaml；缺失时返回全默认 + 警告
     asr = get_asr(cfg)           # asr 配置段
     vision = get_vision(cfg)     # vision 配置段
 
@@ -54,7 +54,7 @@ DEFAULTS = {
 # 默认配置文件位置：仓库根（本文件位于 scripts/ 下，上级即仓库根）
 DEFAULT_CONFIG_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "douyin_skills.config.yaml",
+    "douyin_agent_kit.config.yaml",
 )
 
 _CONFIG_NAME = os.path.basename(DEFAULT_CONFIG_PATH)
@@ -121,7 +121,7 @@ def _validate(cfg):
 
 
 def load_config(path=None):
-    """加载配置：读 path（默认仓库根 douyin_skills.config.yaml）。
+    """加载配置：读 path（默认仓库根 douyin_agent_kit.config.yaml）。
 
     文件缺失时返回全默认值并打印警告；文件存在时深合并默认值后校验。
     非法 provider 抛 ValueError。
@@ -129,10 +129,10 @@ def load_config(path=None):
     path = path or DEFAULT_CONFIG_PATH
     if not os.path.exists(path):
         print(
-            f"WARN: 未找到配置文件 douyin_skills.config.yaml（{path}），"
+            f"WARN: 未找到配置文件 douyin_agent_kit.config.yaml（{path}），"
             f"使用全默认配置。\n"
-            f"      可参考 douyin_skills.config.example.yaml 创建，"
-            f"或运行 python setup/setup_douyin_skills.py 交互式生成。",
+            f"      可参考 douyin_agent_kit.config.example.yaml 创建，"
+            f"或运行 python setup/setup_douyin_agent_kit.py 交互式生成。",
             flush=True,
         )
         return copy.deepcopy(DEFAULTS)

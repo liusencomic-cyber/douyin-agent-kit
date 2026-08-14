@@ -343,25 +343,90 @@ class TestOutputSummary:
 class TestWorkDirCleanup:
     """测试工作目录清理逻辑。"""
 
-    def test_cleanup_removes_work_dir(self, tmp_path):
-        """验证默认清理工作目录。"""
+    def test_cleanup_removes_work_dir(self):
+        """验证默认清理工作目录（合法 /tmp 下 douyin 前缀子目录）。"""
         from transcribe_single import cleanup_work_dir
-        work_dir = str(tmp_path / "to_clean")
-        os.makedirs(work_dir)
-        with open(os.path.join(work_dir, "test.txt"), "w") as f:
-            f.write("hello")
-        cleanup_work_dir(work_dir, keep=False)
-        assert not os.path.exists(work_dir)
+        work_dir = os.path.join("/tmp", f"douyin_test_cleanup_{os.getpid()}")
+        os.makedirs(work_dir, exist_ok=True)
+        try:
+            with open(os.path.join(work_dir, "test.txt"), "w") as f:
+                f.write("hello")
+            cleanup_work_dir(work_dir, keep=False)
+            assert not os.path.exists(work_dir)
+        finally:
+            if os.path.isdir(work_dir):
+                shutil.rmtree(work_dir, ignore_errors=True)
 
-    def test_keep_work_preserves_dir(self, tmp_path):
+    def test_keep_work_preserves_dir(self):
         """验证 --keep-work 保留目录。"""
         from transcribe_single import cleanup_work_dir
-        work_dir = str(tmp_path / "to_keep")
-        os.makedirs(work_dir)
-        with open(os.path.join(work_dir, "test.txt"), "w") as f:
-            f.write("hello")
-        cleanup_work_dir(work_dir, keep=True)
-        assert os.path.exists(work_dir)
+        work_dir = os.path.join("/tmp", f"douyin_test_keep_{os.getpid()}")
+        os.makedirs(work_dir, exist_ok=True)
+        try:
+            with open(os.path.join(work_dir, "test.txt"), "w") as f:
+                f.write("hello")
+            cleanup_work_dir(work_dir, keep=True)
+            assert os.path.exists(work_dir)
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
+
+
+class TestWorkDirSafety:
+    """RED 测试：rmtree 安全边界 — 拒绝删除危险路径（/、~、仓库根），绝不 rmtree。"""
+
+    REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def test_rejects_root(self):
+        from transcribe_single import _is_safe_work_dir
+        assert _is_safe_work_dir("/") is False
+
+    def test_rejects_home(self):
+        from transcribe_single import _is_safe_work_dir
+        assert _is_safe_work_dir(os.path.expanduser("~")) is False
+
+    def test_rejects_repo_root(self):
+        """仓库根路径禁止删除（basename 虽以 douyin 开头，但等于仓库根本身）。"""
+        from transcribe_single import _is_safe_work_dir
+        assert _is_safe_work_dir(self.REPO_ROOT) is False
+
+    def test_accepts_tmp_douyin_subdir(self):
+        """/tmp 下 douyin 前缀子目录是合法工作目录。"""
+        from transcribe_single import _is_safe_work_dir
+        assert _is_safe_work_dir("/tmp/douyin_single_work") is True
+
+    def test_rejects_root_without_rmtree(self):
+        """cleanup_work_dir('/') 必须抛 ValueError 且绝不调用 rmtree。"""
+        from transcribe_single import cleanup_work_dir
+        with mock.patch("transcribe_single.shutil.rmtree") as m_rm:
+            with pytest.raises(ValueError):
+                cleanup_work_dir("/", keep=False)
+            m_rm.assert_not_called()
+
+    def test_rejects_home_without_rmtree(self):
+        from transcribe_single import cleanup_work_dir
+        with mock.patch("transcribe_single.shutil.rmtree") as m_rm:
+            with pytest.raises(ValueError):
+                cleanup_work_dir(os.path.expanduser("~"), keep=False)
+            m_rm.assert_not_called()
+
+    def test_rejects_repo_root_without_rmtree(self):
+        from transcribe_single import cleanup_work_dir
+        with mock.patch("transcribe_single.shutil.rmtree") as m_rm:
+            with pytest.raises(ValueError):
+                cleanup_work_dir(self.REPO_ROOT, keep=False)
+            m_rm.assert_not_called()
+
+    def test_cleanup_allows_tmp_douyin_dir(self):
+        """合法 /tmp 下 douyin 前缀目录正常清理。"""
+        from transcribe_single import cleanup_work_dir
+        work_dir = os.path.join("/tmp", f"douyin_test_cleanup_safe_{os.getpid()}")
+        os.makedirs(work_dir, exist_ok=True)
+        try:
+            cleanup_work_dir(work_dir, keep=False)
+            assert not os.path.exists(work_dir)
+        finally:
+            if os.path.isdir(work_dir):
+                shutil.rmtree(work_dir, ignore_errors=True)
 
 
 # ── 环境变量 ────────────────────────────────────────────

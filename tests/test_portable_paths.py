@@ -1,4 +1,4 @@
-"""RED 测试：脚本路径可移植化（去除本机硬编码 ~/Desktop/douyin-sync）。
+"""RED 测试：脚本路径可移植化（去除本机硬编码的 douyin-sync 工作目录路径）。
 
 开源用户 clone 仓库后，脚本应能通过环境变量 DOUYIN_SYNC_DIR 覆盖
 工作目录，或在无环境变量时推断为脚本所在目录，而不是写死开发者本机路径。
@@ -70,13 +70,13 @@ class TestTranscribePortablePaths:
             _restore_transcribe(saved)
 
     def test_base_not_hardcoded_home(self):
-        """RED: BASE 赋值行不应包含 ~/Desktop/douyin-sync 硬编码。"""
+        """RED: BASE 赋值行不应包含本机 douyin-sync 硬编码路径。"""
         import transcribe_archive
         src = open(transcribe_archive.__file__).read()
         for line in src.splitlines():
             if "BASE" in line and "=" in line and "expanduser" in line:
                 assert "douyin-sync" not in line, \
-                    f"BASE 不应硬编码 ~/Desktop/douyin-sync: {line.strip()}"
+                    f"BASE 不应硬编码本机 douyin-sync 路径: {line.strip()}"
 
 
 class TestQrLoginPortablePaths:
@@ -108,10 +108,10 @@ class TestQrLoginPortablePaths:
             _restore_qr_login(saved)
 
     def test_paths_not_hardcoded_home(self):
-        """RED: 路径赋值行不应包含 ~/Desktop/douyin-sync 硬编码。"""
+        """RED: 路径赋值行不应包含本机 douyin-sync 硬编码路径。"""
         import qr_login
         src = open(qr_login.__file__).read()
         for line in src.splitlines():
             if "expanduser" in line and "douyin-sync" in line:
                 assert False, \
-                    f"路径不应硬编码 ~/Desktop/douyin-sync: {line.strip()}"
+                    f"路径不应硬编码本机 douyin-sync 路径: {line.strip()}"

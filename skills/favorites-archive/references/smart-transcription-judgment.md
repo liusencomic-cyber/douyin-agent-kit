@@ -13,7 +13,7 @@
   → 帧 → vision_analyze OCR/理解 → 画面增量信息并入蒸馏报告
 ```
 
-## 脚本（~/Desktop/douyin-sync/）
+## 脚本（仓库根，可用 DOUYIN_SYNC_DIR 覆盖工作目录）
 
 | 脚本 | 用法 | 输出 |
 |---|---|---|

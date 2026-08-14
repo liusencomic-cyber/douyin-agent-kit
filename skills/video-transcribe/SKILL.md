@@ -5,6 +5,12 @@ description: 抖音内容提取→总结→意图判断→自动行动。支持�
 trigger: 用户发送抖音链接（含 douyin.com、iesdouyin.com、v.douyin.com 等短链）
 ---
 
+> **Agent 无关声明**：本技能与具体 Agent 解耦，可在 Hermes / OpenClaw / WorkBuddy /
+> Claude Code / Codex / 任意本地 Agent 上运行。文中提到的 `vision_analyze` 等工具名
+> 仅为示例：**如你的 Agent 无此能力，请按 `agents/adapter-contract.md` 适配，视觉/OCR
+> 走 `douyin_skills.config.yaml` 的 `vision.ocr_provider` / `vision.fallback_ocr`**。
+> 各 Agent 接入方式见 `agents/<你的agent>.md`（设置向导生成的 `AGENT_SETUP.md` 会指向对应文档）。
+
 # 抖音内容提取与智能归档
 
 将抖音视频/图文 → 提取文字 → 归纳总结 → 判断意图 → 自动执行后续动作。
@@ -135,14 +141,14 @@ vision_analyze(image_url="/tmp/douyin_note_imgs/note_XXXX_img0.webp",
 # 1. 下载（Scrapling，Hermes venv）
 ~/.hermes/hermes-agent/venv/bin/python3 douyin_download.py <视频URL或ID>
 
-# 2. GPU 转录 + 语义判断 + 定向截帧（一条命令完成，系统 python3.14）
-/opt/homebrew/bin/python3 ~/Desktop/douyin-sync/transcribe_single.py --mp4 /tmp/douyin_<ID>.mp4 [--title "标题"]
+# 2. GPU 转录 + 语义判断 + 定向截帧（一条命令完成，系统 python3）
+python3 transcribe_single.py --mp4 /tmp/douyin_<ID>.mp4 [--title "标题"]
 ```
 
 - 输出：转录文本（带时间戳）、`needs_visual` 判断、若需要画面则自动按标记时间段截帧到工作目录。
 - 语义判断走本地 Ollama qwen2.5:7b（回环 127.0.0.1，零云端）；三重校验（置信度/双重确认/实义词）防漏判+防误报。
 - 若只想要转录不做画面判断：`--skip-judge`。
-- ⚠️ 脚本在 `~/Desktop/douyin-sync/`（批量管线同目录，已 git 管理、107+ 测试覆盖）。会话 HOME 可能被沙箱改写，必要时 `export HOME=~`。
+- ⚠️ 脚本在仓库根（批量管线同目录，已 git 管理、测试覆盖）。工作目录可用环境变量 `DOUYIN_SYNC_DIR` 覆盖。
 
 ### 备用：手动 Whisper（CPU，仅当 GPU 管线不可用时）
 
@@ -237,12 +243,12 @@ ffmpeg -i /tmp/douyin_XXXX.mp4 -vf "fps=1/3" /tmp/douyin_XXXX_frame_%03d.jpg -y
 |---|---|---|
 | 炒股/投资经验、市场分析 | 知识归档 | 生成Obsidian笔记，存入 `_inbox/赫尔墨斯_inbox/`（归档规则见 obsidian 技能） |
 | 量化因子/交易策略/回测策略 | 策略报告归档 | 生成供 用户 专业回测系统使用的结构化报告/规格书并写入 Obsidian；不要默认由 Hermes 执行实际回测 |
-| GitHub项目/开源工具/软件推荐 | 工具待测 | 添加到待办事项，提醒Boss测试；也可直接生成 Obsidian 工具笔记后添加待办测试 |
+| GitHub项目/开源工具/软件推荐 | 工具待测 | 添加到待办事项，提醒用户测试；也可直接生成 Obsidian 工具笔记后添加待办测试 |
 | 读书/学习/方法论 | 知识归档 | 生成Obsidian笔记 |
 | 好物推荐/产品测评 | 消费决策 | 添加到待办事项，附链接和要点 |
 | 新闻/热点/时事 | 资讯了解 | 仅展示总结，不归档；但 用户 明确说"所有链接都要归档"时，生成简洁笔记归档 |
 | 生活技巧/教程 | 技能学习 | 生成Obsidian笔记 |
-| 其他 | 视情况 | 先展示，询问Boss是否需要归档；若 用户 明确规则"所有链接都要归档"，则直接归档 |
+| 其他 | 视情况 | 先展示，询问用户是否需要归档；若 用户 明确规则"所有链接都要归档"，则直接归档 |
 
 **归档到 Obsidian 的规则（2026-08-10 解耦，全局规则归 `obsidian` 技能）：**
 - ⚠️ 写入路径/命名/inbox 约定等**全局规则已上移 obsidian 技能**（note-taking/obsidian），本技能直接引用，不再自行维护。

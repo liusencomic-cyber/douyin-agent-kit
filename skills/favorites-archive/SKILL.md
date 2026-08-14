@@ -5,6 +5,12 @@ description: 抖音收藏列表/博主全量批量归档：Cookie 登录、安�
 trigger: 需要读取抖音收藏/喜欢列表、批量下载博主作品、或用本人 Cookie 做抖音自动化时
 ---
 
+> **Agent 无关声明**：本技能与具体 Agent 解耦，可在 Hermes / OpenClaw / WorkBuddy /
+> Claude Code / Codex / 任意本地 Agent 上运行。文中提到的 `vision_analyze` 等工具名
+> 仅为示例：**如你的 Agent 无此能力，请按 `agents/adapter-contract.md` 适配，视觉/OCR
+> 走 `douyin_skills.config.yaml` 的 `vision.ocr_provider` / `vision.fallback_ocr`**。
+> 各 Agent 接入方式见 `agents/<你的agent>.md`（设置向导生成的 `AGENT_SETUP.md` 会指向对应文档）。
+
 # 抖音收藏自动归档 / 博主蒸馏（已认证批量工作流）
 
 单条链接的转录归档走 `douyin-video-transcribe` skill；本 skill 管**需要本人 Cookie 的批量工作流**：收藏列表同步、博主全量扒取、定时增量归档。
@@ -17,8 +23,8 @@ trigger: 需要读取抖音收藏/喜欢列表、批量下载博主作品、或�
   - 博主全量：`link` 用博主主页 URL + `mode: [post]`，`number.post: 0` = 全部
   - SQLite 去重、浏览器兜底（`browser_fallback`）、REST 模式（`--serve`）
   - 收藏/喜欢是私密数据，必须本人 Cookie；`collect` 模式不支持增量停止（靠 SQLite 去重防重复下载）
-- 部署位置：`~/Desktop/douyin-sync/`（repo + 独立 venv + config.yml + qr_login.py）。
-- 运行方式（Gateway 守卫绕过，同 douyin-video-transcribe 的 wrapper 模式）：PATH 加 uv 的 python3.11 bin + `PYTHONPATH=~/Desktop/douyin-sync/venv/lib/python3.11/site-packages`，裸 `python3 run.py -c config.yml`。**注意 `./venv/bin/python` 这种相对路径调用解释器同样会被守卫拦截**，不只绝对路径。
+- 部署位置：仓库根（可用环境变量 `DOUYIN_SYNC_DIR` 覆盖工作目录；上游 douyin-downloader clone 到 `douyin-downloader/` 子目录，独立 venv + config.yml + `qr_login.py`）。
+- 运行方式：PATH 加依赖 venv 的 bin + `PYTHONPATH=<venv>/lib/python3.x/site-packages`，裸 `python3 run.py -c config.yml`。**注意 `./venv/bin/python` 这种相对路径调用解释器同样会被守卫拦截**，不只绝对路径。
 
 ## 账号安全五条铁律（用户 明确要求"不能封号"）
 
@@ -32,7 +38,7 @@ trigger: 需要读取抖音收藏/喜欢列表、批量下载博主作品、或�
 
 ## 扫码登录流程（用户 不在 Mac 旁也能完成）
 
-脚本：`~/Desktop/douyin-sync/qr_login.py`（headless Playwright）
+脚本：仓库根 `qr_login.py`（headless Playwright）
 
 1. 打开抖音首页——登录弹窗**自动出现**，无需点"登录"按钮（点选择器会超时，属正常）。
 2. 抓二维码：data-URI 的 `<img>`，**512×512**（过滤条件要 `naturalWidth <= 600`，`<400` 会漏掉）。
@@ -61,9 +67,9 @@ trigger: 需要读取抖音收藏/喜欢列表、批量下载博主作品、或�
   2. 访问 `/user/<sec_uid>` 主页——**公开免登录可读**，`body.innerText` 含「抖音号：xxx」、粉丝数、作品数；
   3. **必须核对主页抖音号与 用户 给的一致**再批量下载。实测：用户 给数字号 73975601439，而目标博主小W玩AI 实际是 wensiyAI——不核对就会抓错人。
 - 用户 只给纯数字抖音号且无从对应时：请他在 APP 内「主页 → 分享 → 复制链接」发长链接，最省事零风险。
-- 脚本：`~/.hermes/skills/media/douyin-favorites-archive/scripts/resolve_creator.py`（**不在** `~/Desktop/douyin-sync/` 根目录，2026-08-07 实测 `cd douyin-sync && python3 scripts/resolve_creator.py` 报 No such file；须用绝对路径调用）。支持 `--video-url` 或 `--sec-uid`，输出 sec_uid/抖音号/粉丝/作品数。
+- 脚本：本技能目录 `scripts/resolve_creator.py`（不在仓库根；调用用技能脚本绝对路径，勿假设在根目录）。支持 `--video-url` 或 `--sec-uid`，输出 sec_uid/抖音号/粉丝/作品数。
 - **uv python 目录版本会漂移**：skill 旧文档写 `cpython-3.11.11-macos-aarch64-none`，2026-08-07 实测该目录已不存在（PATH 静默失效，python3 落到 /opt/homebrew 3.14，报错特征：resolve 脚本找不到或 import 失败）。先 `ls ~/.local/share/uv/python/` 探测实际版本号（当前为 `cpython-3.11.15-macos-aarch64-none`）再拼 PATH。
-- **config 文件位置**：所有 `config*.yml` 在 `~/Desktop/douyin-sync/douyin-downloader/` 子目录（不在根目录）。新博主蒸馏复制 `config_<博主A>.yml` → `config_<博主B>.yml`，改 link / number.post / database_path 即可（cookies 块可直接复用；sid_guard 有效期约 3 个月，2026-08 的 Cookie 可用到 2026-10-03）。
+- **config 文件位置**：所有 `config*.yml` 在 `douyin-downloader/` 子目录（不在仓库根）。新博主蒸馏复制 `config_<博主A>.yml` → `config_<博主B>.yml`，改 link / number.post / database_path 即可（cookies 块可直接复用；sid_guard 有效期约 3 个月，2026-08 的 Cookie 可用到 2026-10-03）。
 - **macOS 无 `timeout` 命令**：不要用 `timeout 280 python3 ...`（command not found）；直接跑，用 terminal 工具自身 timeout 参数控制（后台跑用 background=true + notify_on_complete=true）。
 
 ## 博主蒸馏流程（2026-08-04 试跑验证，2026-08-07 用户 纠正后修订）

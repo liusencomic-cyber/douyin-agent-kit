@@ -207,8 +207,13 @@ def build_config_interactive(args):
 
 # ── AGENT_SETUP.md 生成 ───────────────────────────────────────────
 
+# claude-code / codex 等通用编码 Agent 共用 generic-agent 适配文档
+AGENT_DOC_MAP = {"claude-code": "generic-agent", "codex": "generic-agent"}
+
+
 def generate_agent_setup_md(agent, cfg):
     """按所选 Agent 生成专属接入说明（引用 agents/<agent>.md）。"""
+    doc_name = AGENT_DOC_MAP.get(agent, agent)
     asr = cfg["asr"]
     vision = cfg["vision"]
     archive = cfg["archive"]
@@ -223,7 +228,7 @@ def generate_agent_setup_md(agent, cfg):
     return f"""# AGENT_SETUP —— douyin-skills 接入说明（{agent}）
 
 本文件由设置向导根据你的选择生成，是 {agent} 接入本仓库的操作手册。
-能力契约与通用约定见 `agents/adapter-contract.md`；本 Agent 的详细适配见 `agents/{agent}.md`。
+能力契约与通用约定见 `agents/adapter-contract.md`；本 Agent 的详细适配见 `agents/{doc_name}.md`。
 
 ## 1. 当前环境（来自 douyin_skills.config.yaml）
 

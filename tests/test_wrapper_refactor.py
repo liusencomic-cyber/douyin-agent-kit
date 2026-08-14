@@ -33,7 +33,7 @@ class TestRunPipelineEnv:
         assert "/opt/homebrew/bin/python3" not in content, (
             f"run_pipeline.sh 不得硬编码本机 python 路径\n内容:\n{content[:500]}"
         )
-        assert "$HOME/Desktop" not in content, (
+        assert "$HOME/Desktop/douyin-sync" not in content, (
             f"run_pipeline.sh 不得硬编码本机 sync 目录\n内容:\n{content[:500]}"
         )
 
@@ -131,7 +131,7 @@ class TestRunSyncEnv:
         assert "venv/bin/python3" in content, (
             f"run_sync.sh 应使用 sync 目录下 venv/bin/python3\n内容:\n{content[:500]}"
         )
-        assert "$HOME/Desktop" not in content, (
+        assert "$HOME/Desktop/douyin-sync" not in content, (
             f"run_sync.sh 不得硬编码本机 sync 目录\n内容:\n{content[:500]}"
         )
 

@@ -10,12 +10,15 @@ import os
 import re
 import sys
 import time
+from pathlib import Path
 
-from playwright.sync_api import sync_playwright
-
+# 注意：playwright 在 main() 内延迟 import，保证模块可被安全 import（
+# 不依赖目标环境已安装 playwright），也便于测试与配置检查。
+# 可移植工作目录：优先环境变量 DOUYIN_SYNC_DIR，否则推断为脚本所在目录（仓库根）。
+BASE = os.environ.get("DOUYIN_SYNC_DIR") or str(Path(__file__).resolve().parent)
 QR_PATH = "/tmp/dy_login_qr.png"
-COOKIES_JSON = os.path.expanduser("~/Desktop/douyin-sync/douyin-downloader/config/cookies.json")
-CONFIG_YML = os.path.expanduser("~/Desktop/douyin-sync/douyin-downloader/config.yml")
+COOKIES_JSON = os.path.join(BASE, "douyin-downloader/config/cookies.json")
+CONFIG_YML = os.path.join(BASE, "douyin-downloader/config.yml")
 SCAN_TIMEOUT = 900  # 15 分钟扫码窗口
 
 
@@ -32,6 +35,7 @@ def find_chromium():
 
 
 def main():
+    from playwright.sync_api import sync_playwright
     chromium = find_chromium()
     if not chromium:
         print("FATAL: no playwright chromium found")

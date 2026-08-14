@@ -10,11 +10,25 @@ import re
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
-BASE = os.path.expanduser("~/Desktop/douyin-sync")
+# 可移植工作目录：优先环境变量 DOUYIN_SYNC_DIR，否则推断为脚本所在目录（仓库根）。
+BASE = os.environ.get("DOUYIN_SYNC_DIR") or str(Path(__file__).resolve().parent)
 COLLECT_DIR = os.path.join(BASE, "Downloaded/self_self/collect")
 PROCESSED_JSON = os.path.join(BASE, "processed.json")
-VAULT_INBOX = None  # 从共享配置延迟加载
+VAULT_INBOX = None  # 从共享配置延迟加载（见 get_vault_inbox）
+
+
+def get_vault_inbox():
+    """延迟加载归档收件箱路径。
+
+    模块可被安全 import（不依赖本机配置文件存在）；
+    首次真正需要归档时读取 archive_config.json 并缓存。
+    """
+    global VAULT_INBOX
+    if VAULT_INBOX is None:
+        VAULT_INBOX = load_archive_config().get("vault_inbox")
+    return VAULT_INBOX
 
 
 def load_archive_config():
@@ -30,8 +44,6 @@ def load_archive_config():
     with open(cfg_path, encoding="utf-8") as f:
         return json.load(f)
 
-
-VAULT_INBOX = load_archive_config().get("vault_inbox")
 
 WHISPER_MODEL = "mlx-community/whisper-large-v3-turbo"
 
@@ -200,7 +212,9 @@ def main():
         log("DONE: 无新内容")
         return
 
-    os.makedirs(VAULT_INBOX, exist_ok=True)
+    # 延迟加载归档配置（模块可安全 import，运行时才要求配置存在）
+    vault_inbox = get_vault_inbox()
+    os.makedirs(vault_inbox, exist_ok=True)
 
     # 防御：避免 PYTHONPATH 污染导致 numpy 版本冲突
     os.environ.pop("PYTHONPATH", None)

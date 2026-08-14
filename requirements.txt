@@ -1,6 +1,6 @@
 # 依赖清单（Python 3.14）
 mlx>=0.31
-mlx-whisper>=0.4
+mlx-whisper>=0.4.3
 filelock
 scipy
 packaging

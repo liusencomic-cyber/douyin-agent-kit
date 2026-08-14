@@ -24,8 +24,8 @@ def _preflight_fake_model(tmp_path_factory):
     """session 级：模拟 mlx 模型缓存中的 weights.safetensors 路径。
 
     形态对齐 ~/.cache/huggingface/hub/models--mlx-community--whisper-large-v3-turbo/
-    snapshots/<hash>/weights.safetensors。[RED] 阶段仅返回路径（文件不存在，
-    模拟 CI 干净环境模型缺失）；[GREEN] 阶段创建文件（模型检查通过）。
+    snapshots/<hash>/weights.safetensors。文件内容仅为占位（脚本只检查存在性），
+    不触发真实模型下载。
     """
     weights = (
         tmp_path_factory.mktemp("fake-mlx-model")
@@ -34,6 +34,8 @@ def _preflight_fake_model(tmp_path_factory):
         / "abc123"
         / "weights.safetensors"
     )
+    weights.parent.mkdir(parents=True)
+    weights.write_bytes(b"fake weights")
     return weights
 
 

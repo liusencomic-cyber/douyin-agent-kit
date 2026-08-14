@@ -67,6 +67,14 @@ def check_downloader(cfg=None):
     d = os.path.join(base, "douyin-downloader")
     if os.path.isdir(d):
         return ("douyin-downloader", "OK", d)
+    # 仅 favorites_sync / creator_distill 需要上游 douyin-downloader；
+    # 单条提取（默认）用 scrapling 版 douyin_download.py，缺失不阻断。
+    needed = bool(cfg) and bool(
+        (cfg.get("features", {}) or {}).get("favorites_sync")
+        or (cfg.get("features", {}) or {}).get("creator_distill"))
+    if not needed:
+        return ("douyin-downloader", "WARN",
+                f"未找到 douyin-downloader/（{d}；未启用 favorites_sync/creator_distill 时可不安装）")
     return ("douyin-downloader", "MISSING",
             f"未找到 douyin-downloader/（{d}；请 clone jiji262/douyin-downloader）")
 

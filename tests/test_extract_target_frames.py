@@ -87,6 +87,46 @@ class TestFindVideoDir:
         result = extract_target_frames.find_video_dir(str(video_base), "2026-07-01_纳指标普7月前瞻")
         assert result is not None
 
+    def test_exact_match_preferred_over_prefix(self, tmp_path):
+        """P3-6 RED→GREEN: 同名前缀歧义时精确匹配优先（而非 startswith 首个）。"""
+        import extract_target_frames
+
+        video_base = tmp_path / "videos"
+        video_base.mkdir()
+
+        # 非精确但前缀匹配的目录（标题="投资_1abc"，排序在前）
+        d1 = video_base / "2026-07-01_投资_1abc_1111111111"
+        d1.mkdir()
+        (d1 / "v1.mp4").write_text("fake")
+        # 精确匹配的目录（标题="投资"，排序在后）
+        d2 = video_base / "2026-07-01_投资_2222222222"
+        d2.mkdir()
+        (d2 / "v2.mp4").write_text("fake")
+
+        result = extract_target_frames.find_video_dir(str(video_base), "2026-07-01_投资")
+        assert result is not None
+        assert result.endswith("v2.mp4"), (
+            f"精确匹配应优先（目录标题完全一致），实际: {result}"
+        )
+
+    def test_title_sanitize_aligned_with_transcribe_single(self, tmp_path):
+        """P3-6 RED→GREEN: 标题非法字符处理与 transcribe_single.sanitize_title 对齐。"""
+        import extract_target_frames
+        from transcribe_single import sanitize_title
+
+        video_base = tmp_path / "videos"
+        video_base.mkdir()
+        # setup_video_dir 用 sanitize_title 生成目录：标题 "测试/视频" → "测试_视频"
+        item_dir = video_base / f"2026-07-01_{sanitize_title('测试/视频')}_1234567890123"
+        item_dir.mkdir()
+        (item_dir / "v.mp4").write_text("fake")
+
+        # needs.json 里的标题可能含原始非法字符
+        result = extract_target_frames.find_video_dir(
+            str(video_base), "2026-07-01_测试/视频")
+        assert result is not None, "非法字符标题应与 sanitize 后的目录对齐匹配"
+        assert result.endswith("v.mp4")
+
 
 # ── extract_frames 测试 ──────────────────────────────────────
 

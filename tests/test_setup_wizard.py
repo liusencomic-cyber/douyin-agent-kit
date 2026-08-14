@@ -1,7 +1,7 @@
-"""RED 测试：设置向导 setup/setup_douyin_skills.py
+"""RED 测试：设置向导 setup/setup_douyin_agent_kit.py
 
 --non-interactive 参数注入生成正确配置；交互模式由 input() 驱动（subprocess 喂 stdin）；
-生成 douyin_skills.config.yaml / archive_config.json / AGENT_SETUP.md。
+生成 douyin_agent_kit.config.yaml / archive_config.json / AGENT_SETUP.md。
 """
 import json
 import os
@@ -10,11 +10,11 @@ import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO_ROOT)  # 确保仓库根优先（避免 setup 顶层模块与 PYTHONPATH 冲突）
-WIZARD = os.path.join(REPO_ROOT, "setup", "setup_douyin_skills.py")
+WIZARD = os.path.join(REPO_ROOT, "setup", "setup_douyin_agent_kit.py")
 
 
 def run_wizard(tmp_path, *extra):
-    out = tmp_path / "douyin_skills.config.yaml"
+    out = tmp_path / "douyin_agent_kit.config.yaml"
     cmd = [sys.executable, WIZARD, "--non-interactive", "--skip-checks",
            "--config-out", str(out), "--wizard-dir", str(tmp_path)] + list(extra)
     r = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
@@ -126,7 +126,7 @@ class TestInteractive:
             "1,2",              # 6. 功能 multi-select（single_extract,favorites_sync）
             "n",                # 7. Obsidian 归档：跳过
         ]
-        out = tmp_path / "douyin_skills.config.yaml"
+        out = tmp_path / "douyin_agent_kit.config.yaml"
         cmd = [sys.executable, WIZARD, "--skip-checks",
                "--config-out", str(out), "--wizard-dir", str(tmp_path)]
         r = subprocess.run(cmd, input="\n".join(answers) + "\n",

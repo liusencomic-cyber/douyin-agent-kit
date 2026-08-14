@@ -1,6 +1,6 @@
 """RED 测试：统一配置系统（config.schema.json / scripts/dy_config.py）
 
-验证 douyin_skills.config.yaml 的加载、默认值、字段校验（非法 provider 报错）
+验证 douyin_agent_kit.config.yaml 的加载、默认值、字段校验（非法 provider 报错）
 与 get_asr()/get_vision() 访问器、select_asr_engine() 分发点。
 """
 import json
@@ -9,7 +9,7 @@ import pytest
 
 @pytest.fixture()
 def config_path(tmp_path):
-    return tmp_path / "douyin_skills.config.yaml"
+    return tmp_path / "douyin_agent_kit.config.yaml"
 
 
 class TestLoadConfig:
@@ -35,7 +35,7 @@ class TestLoadConfig:
         assert cfg["features"]["favorites_sync"] is False
         assert cfg["features"]["creator_distill"] is False
         # 应有警告提示用户使用默认配置
-        assert "douyin_skills.config.yaml" in capsys.readouterr().out
+        assert "douyin_agent_kit.config.yaml" in capsys.readouterr().out
 
     def test_valid_config_merged(self, config_path):
         config_path.write_text(json.dumps({
@@ -65,6 +65,17 @@ class TestLoadConfig:
         cfg2 = dy_config.load_config(str(config_path))
         assert cfg2["asr"]["provider"] == "mlx-whisper", \
             "多次 load 不应共享同一份默认字典"
+
+
+class TestNaming:
+    """项目改名：默认配置路径/文件名必须用新名 douyin_agent_kit.config.yaml。"""
+
+    def test_default_config_path_uses_new_name(self):
+        from scripts import dy_config
+        assert dy_config.DEFAULT_CONFIG_PATH.endswith(
+            "douyin_agent_kit.config.yaml"), \
+            f"DEFAULT_CONFIG_PATH 应为新文件名，实际: {dy_config.DEFAULT_CONFIG_PATH}"
+        assert dy_config._CONFIG_NAME == "douyin_agent_kit.config.yaml"
 
 
 class TestValidation:
@@ -109,7 +120,7 @@ class TestValidation:
         from scripts import dy_config
         with pytest.raises(Exception) as ei:
             dy_config.load_config(str(config_path))
-        assert "douyin_skills.config.yaml" in str(ei.value) or \
+        assert "douyin_agent_kit.config.yaml" in str(ei.value) or \
             "config" in str(ei.value).lower()
 
 
@@ -142,7 +153,7 @@ class TestSelectAsrEngine:
     def test_from_config(self, tmp_path, monkeypatch):
         from scripts import dy_config
         import transcribe_archive
-        cfg = tmp_path / "douyin_skills.config.yaml"
+        cfg = tmp_path / "douyin_agent_kit.config.yaml"
         cfg.write_text(json.dumps({"asr": {"provider": "whisper.cpp"}}),
                        encoding="utf-8")
         monkeypatch.setattr(dy_config, "DEFAULT_CONFIG_PATH", str(cfg))
@@ -152,7 +163,7 @@ class TestSelectAsrEngine:
         """非 mlx-whisper 的引擎当前未实现，应明确 NotImplementedError 而非假装支持。"""
         from scripts import dy_config
         import transcribe_archive
-        cfg = tmp_path / "douyin_skills.config.yaml"
+        cfg = tmp_path / "douyin_agent_kit.config.yaml"
         cfg.write_text(json.dumps({"asr": {"provider": "faster-whisper"}}),
                        encoding="utf-8")
         monkeypatch.setattr(dy_config, "DEFAULT_CONFIG_PATH", str(cfg))

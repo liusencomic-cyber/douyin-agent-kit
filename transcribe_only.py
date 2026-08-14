@@ -4,54 +4,15 @@
 """
 import argparse, json, os, re, subprocess, sys, tempfile
 
+from scripts.asr_utils import ensure_asr_engine_supported
+from scripts.format_utils import segments_to_timestamps
+
 WHISPER_MODEL = "mlx-community/whisper-large-v3-turbo"
 
-
-def select_asr_engine():
-    """ASR 引擎分发点：返回当前 provider 名（来自 douyin_agent_kit.config.yaml）。
-
-    配置不可读/未配置时回落默认 mlx-whisper。其他 provider 为接口预留。
-    """
-    try:
-        from scripts.dy_config import load_config, get_asr
-        return get_asr(load_config()).get("provider", "mlx-whisper")
-    except Exception:
-        return "mlx-whisper"
-
-
-def ensure_asr_engine_supported():
-    """校验当前 ASR provider 已实现；未实现时抛 NotImplementedError 明确提示。"""
-    engine = select_asr_engine()
-    if engine != "mlx-whisper":
-        raise NotImplementedError(
-            f"ASR provider '{engine}' 尚未实现完整转录：当前仅支持 mlx-whisper。\n"
-            f"可在 douyin_agent_kit.config.yaml 的 asr.provider 选择: "
-            f"mlx-whisper / faster-whisper / whisper.cpp / external-command / none"
-        )
-    return engine
 
 def log(msg):
     print(msg, flush=True)
 
-def format_timestamp(seconds):
-    """秒 → MM:SS.mmm 或 HH:MM:SS.mmm（当 ≥1h 时）"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = seconds % 60
-    if hours > 0:
-        return f"{hours:02d}:{minutes:02d}:{secs:06.3f}"
-    return f"{minutes:02d}:{secs:06.3f}"
-
-def segments_to_timestamps(segments):
-    """将 mlx_whisper segments 列表转为时间戳分段文本。"""
-    if not segments:
-        return ""
-    lines = []
-    for seg in segments:
-        start = format_timestamp(seg["start"])
-        end = format_timestamp(seg["end"])
-        lines.append(f"[{start} --> {end}] {seg['text']}")
-    return "\n".join(lines)
 
 def main():
     # 防御：避免 PYTHONPATH 污染导致 numpy 版本冲突

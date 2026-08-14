@@ -1,9 +1,8 @@
-# douyin_agent_kit.config.yaml 结构定义（JSON Schema draft-07）
-# 供外部工具校验；运行时校验由 scripts/dy_config.py 内置逻辑完成（纯 stdlib）。
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://example.com/douyin-agent-kit/config.schema.json",
   "title": "douyin-agent-kit 统一配置",
+  "description": "douyin_agent_kit.config.yaml 结构定义（JSON Schema draft-07）。供外部工具校验；运行时校验由 scripts/dy_config.py 内置逻辑完成（纯 stdlib）。",
   "type": "object",
   "additionalProperties": false,
   "properties": {

@@ -429,6 +429,96 @@ class TestWorkDirSafety:
                 shutil.rmtree(work_dir, ignore_errors=True)
 
 
+# ── 输出持久化（P0-2）──────────────────────────────────────
+
+class TestPersistOutputs:
+    """RED→GREEN: 默认清理 work_dir 前，产物必须复制到持久 out-dir（防路径幽灵）。"""
+
+    def test_persist_copies_outputs_and_updates_paths(self, tmp_path):
+        """persist_outputs 把转录/判断/帧文件复制到 out-dir，并更新 result 路径。"""
+        from transcribe_single import persist_outputs
+        work_dir = tmp_path / "work"; work_dir.mkdir()
+        out_dir = tmp_path / "out"
+        (work_dir / "transcripts.txt").write_text("T", encoding="utf-8")
+        (work_dir / "needs.json").write_text("{}", encoding="utf-8")
+        frames = work_dir / "frames"; frames.mkdir()
+        (frames / "f1.jpg").write_bytes(b"x")
+
+        result = {
+            "transcript_path": str(work_dir / "transcripts.txt"),
+            "needs_visual": True,
+            "reason": "含图表",
+            "frames_dir": str(frames),
+            "frame_count": 1,
+            "title": "测试",
+            "date": "2026-07-01",
+            "aweme_id": "1234567890123",
+        }
+        new = persist_outputs(str(work_dir), str(out_dir), result)
+
+        assert (out_dir / "transcripts.txt").exists()
+        assert (out_dir / "needs.json").exists()
+        assert (out_dir / "frames" / "f1.jpg").exists()
+        assert new["transcript_path"] == str(out_dir / "transcripts.txt")
+        assert new["frames_dir"] == str(out_dir / "frames")
+
+    def test_main_persists_outputs_work_dir_cleaned(self, tmp_path, capsys):
+        """跑通 pipeline（mock）后：产物落 out-dir；work_dir 被清理但 out-dir 产物在。"""
+        import transcribe_single
+        mp4_path = str(tmp_path / "douyin_5555555555555555555.mp4")
+        make_dummy_mp4(mp4_path)
+        work_dir = f"/tmp/douyin_test_persist_{os.getpid()}"
+        out_dir = str(tmp_path / "out")
+
+        def side_effect(cmd, **kwargs):
+            if any("transcribe_only.py" in a for a in cmd):
+                os.makedirs(work_dir, exist_ok=True)
+                make_dummy_transcript(os.path.join(work_dir, "transcripts.txt"))
+                with open(os.path.join(work_dir, "processed.json"), "w") as f:
+                    json.dump([], f)
+            elif any("analyze_visual_needs.py" in a for a in cmd):
+                make_dummy_needs_json(os.path.join(work_dir, "needs.json"),
+                                      needs_visual=True)
+            elif any("extract_target_frames.py" in a for a in cmd):
+                frames = os.path.join(work_dir, "frames")
+                os.makedirs(frames, exist_ok=True)
+                with open(os.path.join(frames, "f1.jpg"), "wb") as f:
+                    f.write(b"x")
+            return mock.MagicMock(returncode=0)
+
+        with mock.patch("subprocess.run", side_effect=side_effect):
+            with mock.patch.object(sys, "argv", [
+                "transcribe_single.py", "--mp4", mp4_path,
+                "--title", "持久化测试", "--date", "2026-07-01",
+                "--work-dir", work_dir, "--out-dir", out_dir,
+            ]):
+                try:
+                    transcribe_single.main()
+                except SystemExit:
+                    pass
+
+        # out-dir 产物在（转录/判断/帧）
+        assert (out_dir / "transcripts.txt").exists(), "转录产物应落 out-dir"
+        assert (out_dir / "needs.json").exists(), "判断产物应落 out-dir"
+        assert (out_dir / "frames" / "f1.jpg").exists(), "帧产物应落 out-dir"
+        # work_dir 被清理
+        assert not os.path.exists(work_dir), "work_dir 应被清理"
+        # 汇总打印的是持久路径
+        captured = capsys.readouterr().out
+        assert str(out_dir / "transcripts.txt") in captured, \
+            "汇总应打印持久化后的转录路径"
+
+    def test_default_out_dir_is_repo_output(self):
+        """默认 --out-dir 为仓库根下 output/。"""
+        from transcribe_single import parse_args
+        with mock.patch.object(sys, "argv", [
+            "transcribe_single.py", "--mp4", "/tmp/douyin_123.mp4",
+        ]):
+            args = parse_args()
+        assert args.out_dir == os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output")
+
+
 # ── 环境变量 ────────────────────────────────────────────
 
 class TestEnvironment:

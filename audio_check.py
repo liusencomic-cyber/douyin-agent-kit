@@ -25,24 +25,30 @@ def probe_audio(mp4):
         return None
 
 def silent_ratio(mp4):
-    """用 silencedetect 估计静音占比"""
+    """用 silencedetect 估计静音占比（排序后双指针配对，防重复计数）"""
     try:
         r = subprocess.run(
             ["ffmpeg", "-i", mp4, "-af", "silencedetect=noise=-35dB:d=0.8", "-f", "null", "-"],
             capture_output=True, text=True, timeout=180)
-        starts = re.findall(r"silence_start:\s*([\d.]+)", r.stderr)
-        ends = re.findall(r"silence_end:\s*([\d.]+)", r.stderr)
+        starts = [float(x) for x in
+                  re.findall(r"silence_start:\s*([\d.]+)", r.stderr)]
+        ends = [float(x) for x in
+                re.findall(r"silence_end:\s*([\d.]+)", r.stderr)]
         dur = re.search(r"Duration:\s*(\d+):(\d+):([\d.]+)", r.stderr)
         d = (int(dur.group(1))*3600 + int(dur.group(2))*60 + float(dur.group(3))) if dur else 0
         if d <= 0:
             return 0.0
-        # 把 silence_start/end 配对累计
+        # 排序后双指针配对：每个 end 至多配一次，避免重复计数（O(n log n)）
+        starts.sort()
+        ends.sort()
         total_silence = 0.0
+        j = 0
         for s in starts:
-            # 找第一个大于 s 的 end
-            e = next((x for x in ends if x > s), None)
-            if e:
-                total_silence += (e - s)
+            while j < len(ends) and ends[j] <= s:
+                j += 1
+            if j < len(ends):
+                total_silence += ends[j] - s
+                j += 1
         return min(1.0, total_silence / d)
     except Exception:
         return 0.0

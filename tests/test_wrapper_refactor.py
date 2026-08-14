@@ -22,14 +22,26 @@ def _read_script(path):
 
 
 class TestRunPipelineEnv:
-    """run_pipeline.sh 环境清理"""
+    """run_pipeline.sh 环境清理与可移植性"""
 
-    def test_uses_system_python3(self):
-        """必须使用 /opt/homebrew/bin/python3（系统 3.14）"""
+    def test_respects_douyin_sync_dir(self):
+        """必须读取 DOUYIN_SYNC_DIR（可移植），不得硬编码本机路径"""
         content = _read_script(RUN_PIPELINE)
-        # 至少出现一次 /opt/homebrew/bin/python3
-        assert "/opt/homebrew/bin/python3" in content, (
-            f"run_pipeline.sh 必须使用 /opt/homebrew/bin/python3\n内容:\n{content[:500]}"
+        assert "DOUYIN_SYNC_DIR" in content, (
+            f"run_pipeline.sh 应读取 DOUYIN_SYNC_DIR\n内容:\n{content[:500]}"
+        )
+        assert "/opt/homebrew/bin/python3" not in content, (
+            f"run_pipeline.sh 不得硬编码本机 python 路径\n内容:\n{content[:500]}"
+        )
+        assert "$HOME/Desktop" not in content, (
+            f"run_pipeline.sh 不得硬编码本机 sync 目录\n内容:\n{content[:500]}"
+        )
+
+    def test_python_resolved_via_path_or_env(self):
+        """PY 应取 $PYTHON 或 PATH 上的 python3，而非写死的绝对路径"""
+        content = _read_script(RUN_PIPELINE)
+        assert "${PYTHON:-python3}" in content or "PYTHON" in content, (
+            f"run_pipeline.sh 应支持 $PYTHON 覆盖或 PATH 解析\n内容:\n{content[:500]}"
         )
 
     def test_no_uv_path(self):
@@ -110,12 +122,17 @@ class TestRunSyncEnv:
             f"run_sync.sh 必须有 HOME 兜底逻辑\n内容:\n{content[:500]}"
         )
 
-    def test_uses_venv_python_directly(self):
-        """必须直接调用 venv/bin/python3，不通过 PATH+PYTHONPATH 组合"""
+    def test_venv_python_under_sync_dir(self):
+        """venv python 应位于 DOUYIN_SYNC_DIR 下，而非硬编码 HOME 路径"""
         content = _read_script(RUN_SYNC)
-        # 直接路径调用 venv python
+        assert "DOUYIN_SYNC_DIR" in content, (
+            f"run_sync.sh 应读取 DOUYIN_SYNC_DIR\n内容:\n{content[:500]}"
+        )
         assert "venv/bin/python3" in content, (
-            f"run_sync.sh 必须直接调用 venv/bin/python3\n内容:\n{content[:500]}"
+            f"run_sync.sh 应使用 sync 目录下 venv/bin/python3\n内容:\n{content[:500]}"
+        )
+        assert "$HOME/Desktop" not in content, (
+            f"run_sync.sh 不得硬编码本机 sync 目录\n内容:\n{content[:500]}"
         )
 
     def test_calls_run_py_with_config(self):
@@ -123,3 +140,23 @@ class TestRunSyncEnv:
         content = _read_script(RUN_SYNC)
         assert "run.py" in content, "run_sync.sh 必须调用 run.py"
         assert "config" in content.lower(), "run_sync.sh 必须使用 config"
+
+
+class TestDouyinDownloadProxy:
+    """douyin_download.py 代理不得硬编码本机端口，应从环境变量读。"""
+
+    DOUYIN_DOWNLOAD = ROOT / "skills/video-transcribe/scripts/douyin_download.py"
+
+    def test_no_hardcoded_proxy_port(self):
+        """不得硬编码代理端口 7897（本机路径幽灵）。"""
+        content = self.DOUYIN_DOWNLOAD.read_text(encoding="utf-8")
+        assert "7897" not in content, (
+            f"douyin_download.py 不得硬编码代理端口 7897\n内容:\n{content[:300]}"
+        )
+
+    def test_proxy_read_from_env(self):
+        """代理应从 DOUYIN_PROXY / HTTPS_PROXY 环境变量读取。"""
+        content = self.DOUYIN_DOWNLOAD.read_text(encoding="utf-8")
+        assert "DOUYIN_PROXY" in content or "HTTPS_PROXY" in content, (
+            f"douyin_download.py 应从环境变量读取代理\n内容:\n{content[:300]}"
+        )

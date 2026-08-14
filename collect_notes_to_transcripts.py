@@ -56,7 +56,6 @@ def main():
     if os.path.exists(args.out):
         with open(args.out, encoding="utf-8") as f:
             existing = f.read()
-    have_ids = set(re.findall(r"===== \[\d{4}-\d{2}-\d{2}\] .*?(\d{10,})?$", existing, re.M)) if False else set()
     # 简单去重：按标题行匹配
     existing_titles = set(re.findall(r"^===== \[([\d-]+)\] (.+) =====$", existing, re.M))
 

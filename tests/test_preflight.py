@@ -46,11 +46,18 @@ class TestPreflightAllPass:
     """所有检查通过 → exit 0 + PREFLIGHT OK"""
 
     def test_all_checks_pass(self):
-        """跳过实际 ps 检查（测试环境无残留进程），但模型缓存 + ollama 检查应通过"""
+        """跳过实际 ps 检查（测试环境无残留进程），但模型缓存 + ollama 检查应通过。
+
+        PREFLIGHT_MOCK_OLLAMA=0 模拟 CI 干净环境（无 Ollama 服务）：
+        RED 阶段该测试暴露缺陷 —— 无 Ollama 时脚本输出 PREFLIGHT WARN（exit 0），
+        但此处断言 PREFLIGHT OK 会失败（GitHub Actions 实测）。
+        """
         env = {
             "PREFLIGHT_SKIP_TRANSCRIBE": "1",
             "PREFLIGHT_SKIP_DOWNLOADER": "1",
-            # 模型和 ollama 用真实检查
+            # 模型走 conftest autouse PREFLIGHT_MOCK_MODEL（指向临时假缓存）；
+            # ollama 显式模拟 CI 环境（不可达），见类注释
+            "PREFLIGHT_MOCK_OLLAMA": "0",
         }
         rc, out = _run_preflight(env)
         assert rc == 0, f"期望 exit 0，实际 {rc}\n输出: {out}"

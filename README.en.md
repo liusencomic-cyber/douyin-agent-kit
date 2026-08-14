@@ -84,7 +84,7 @@ the full pipeline (OCR falls back to a configured local solution or is disabled)
 
 ## Requirements
 
-- Python 3.10+ (developed and tested on 3.14)
+- Python 3.10+ (developed and tested on 3.10–3.13)
 - [ffmpeg](https://ffmpeg.org/) (audio extraction / frame extraction)
 - Optional:
   - [Ollama](https://ollama.com) local service (semantic judgment; `ollama pull qwen2.5:7b`)

@@ -439,6 +439,7 @@ class TestEnvironment:
         import transcribe_single
         mp4_path = str(tmp_path / "douyin_4444444444444444444.mp4")
         make_dummy_mp4(mp4_path)
+        work_dir = f"/tmp/douyin_test_hf_{os.getpid()}"
 
         with mock.patch.dict(os.environ, {}, clear=True):
             with mock.patch("subprocess.run") as mock_run:
@@ -448,7 +449,7 @@ class TestEnvironment:
                     "--mp4", mp4_path,
                     "--title", "环境测试",
                     "--date", "2026-07-01",
-                    "--work-dir", str(tmp_path / "work"),
+                    "--work-dir", work_dir,
                     "--skip-judge",
                 ]):
                     transcribe_single.main()

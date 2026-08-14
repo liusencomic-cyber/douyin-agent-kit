@@ -21,7 +21,7 @@
 
 ## 会话案例
 
-- 2026-07-09：用户 分享 `https://v.douyin.com/XXXXXXX/`，描述为 "FredTalk 用 Codex+Stitch 做前端效果"。服务器端无论用 DynamicFetcher、手机 UA、浏览器 navigate 还是 `urllib.request`，最终都解析到视频 `7660178465697664290`《遗忘之海》。画面截帧确认是游戏宣传 CG，无代码/前端相关内容。
+- 2026-07-09：用户 分享 `https://v.douyin.com/XXXXXXX/`，描述为 "FredTalk 用 Codex+Stitch 做前端效果"。服务器端无论用 DynamicFetcher、手机 UA、浏览器 navigate 还是 `urllib.request`，最终都解析到视频 `<示例ID>`《遗忘之海》。画面截帧确认是游戏宣传 CG，无代码/前端相关内容。
 
 ## 正确处理方式
 

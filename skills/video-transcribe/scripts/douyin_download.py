@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """抖音内容下载脚本 — Scrapling版
 用法: 
-  ~/.hermes/hermes-agent/venv/bin/python3 douyin_download.py <视频/图文ID或短链URL>
-  （⚠️ 必须用 Hermes venv 的 Python 运行，系统 Python 无 scrapling 模块）
+  python3 douyin_download.py <视频/图文ID或短链URL>
+  （⚠️ 必须用安装了 scrapling 的 Python 运行：pip install scrapling）
 
 支持:
 

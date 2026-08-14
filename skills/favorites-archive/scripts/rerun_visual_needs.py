@@ -3,7 +3,7 @@
 
 背景：analyze_visual_needs.py 无输入截断，超长时间戳分段（>8K token）传给
 qwen2.5:7b-8k 会触发上下文截断 → 输出非 JSON → 3 次重试失败 → judge_failed 降级 false
-（2026-08-10 某量化博主 112 条实测：39 条失败，截断重跑后 36/39 实为需要画面）。
+（2026-08 某量化博主 112 条实测：39 条失败，截断重跑后 36/39 实为需要画面）。
 
 用法:
   python3 rerun_visual_needs.py --src <转录汇总txt> --needs <原始判断json> --out <修复json> [--max-chars 6000] [--model qwen2.5:7b]

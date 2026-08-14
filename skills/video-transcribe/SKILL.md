@@ -15,7 +15,7 @@ trigger: 用户发送抖音链接（含 douyin.com、iesdouyin.com、v.douyin.co
 
 将抖音视频/图文 → 提取文字 → 归纳总结 → 判断意图 → 自动执行后续动作。
 
-> **脚本速查**：下载统一用 `scripts/douyin_download.py`（Scrapling 版，视频+图文双类型，直连→DynamicFetcher→StealthyFetcher 自动降级）。必须用 Hermes venv Python 运行（系统 Python 无 scrapling）。
+> **脚本速查**：下载统一用 `scripts/douyin_download.py`（Scrapling 版，视频+图文双类型，直连→DynamicFetcher→StealthyFetcher 自动降级）。必须用安装了 scrapling 的 Python 运行（系统 Python 可能无 scrapling，需 pip install scrapling）。
 
 ## 环境依赖
 
@@ -80,7 +80,7 @@ curl -s -L -o /dev/null -w "%{url_effective}" "https://v.douyin.com/XXXX/"
 统一用 `scripts/douyin_download.py`：
 
 ```bash
-~/.hermes/hermes-agent/venv/bin/python3 douyin_download.py <视频ID或URL>
+python3（安装 scrapling 的环境） douyin_download.py <视频ID或URL>
 ```
 
 - 输出：`/tmp/douyin_<ID>.mp4`，音视频分离时输出 `_video.mp4` + `_audio.mp4`（**转录优先用 `_audio.mp4`**）。
@@ -138,8 +138,8 @@ vision_analyze(image_url="/tmp/douyin_note_imgs/note_XXXX_img0.webp",
 ### 推荐：单条智能转录（GPU + 语义判断 + 定向截帧）
 
 ```bash
-# 1. 下载（Scrapling，Hermes venv）
-~/.hermes/hermes-agent/venv/bin/python3 douyin_download.py <视频URL或ID>
+# 1. 下载（Scrapling）
+python3（安装 scrapling 的环境） douyin_download.py <视频URL或ID>
 
 # 2. GPU 转录 + 语义判断 + 定向截帧（一条命令完成，系统 python3）
 python3 transcribe_single.py --mp4 /tmp/douyin_<ID>.mp4 [--title "标题"]
@@ -316,7 +316,7 @@ rm -rf /tmp/douyin_note_imgs/
 ## Pitfalls（2026-08-10 重构重新编号）
 
 ### 下载类
-1. **脚本必须用 Hermes venv Python 运行** — `douyin_download.py` 依赖 scrapling（在 Hermes venv，`~/.hermes/hermes-agent/venv/bin/python3`），系统 Python 3.14 找不到。显式指定 venv Python：`~/.hermes/hermes-agent/venv/bin/python3 douyin_download.py <URL>`。不要直接 `python3 douyin_download.py`。
+1. **脚本必须用 Hermes venv Python 运行** — `douyin_download.py` 依赖 scrapling（在 Hermes venv，`python3（安装 scrapling 的环境）`），系统 Python 3.14 找不到。显式指定 venv Python：`python3（安装 scrapling 的环境） douyin_download.py <URL>`。不要直接 `python3 douyin_download.py`。
 2. **Script defaults to "video" when given numeric ID** — `douyin_download.py` 检查 `INPUT.isdigit()` 默认 `content_type = "video"`。`/note/` 内容必须传完整 URL（或 `https://www.douyin.com/note/<ID>`），否则走错分支。
 3. **curl下载视频不可靠** — URL截断、403、超时频发。**优先用页面内fetch()下载**（脚本已内置），curl仅作fallback。
 4. **图文图片403防盗链** — curl直接下载图片返回403，必须在页面上下文内用 `fetch()` 下载（脚本已内置）。
@@ -356,7 +356,6 @@ rm -rf /tmp/douyin_note_imgs/
 27. **代理导致加载错误页面** — 走代理时 Playwright 可能跳转到不相关视频（标题完全不同）。必须校验页面标题是否匹配预期。
 28. **网络连通性动态变化** — 代理规则和出口IP会变，之前能直连不代表现在也能，运行时检测。
 29. **GitHub/HK网络** — raw.githubusercontent.com 从HK访问被墙或极慢，git clone 需走代理。
-30. **Cellar 绝对路径会触发 Gateway 守卫崩溃** — 命令行直接写 `/opt/homebrew/Cellar/.../python` 或 `-c "import ..."` 触发 lifecycle_guard "embedded null byte" 报错（不是被拦，是守卫自身异常）。绕过：命令写进 /tmp 脚本文件再执行，或只用裸 `python3`+PATH。
 31. **execute_code 沙箱无 playwright 模块** — 必须在 `terminal` 中运行 Playwright/Scrapling 脚本，不能用 `execute_code`。
 
 ### 流程与归档类
@@ -372,9 +371,6 @@ rm -rf /tmp/douyin_note_imgs/
 
 | 方案 | 失败原因 |
 |---|---|
-| 直接运行 venv 路径的 python 或绝对路径调用 uv 基础解释器（如 `~/.local/share/uv/python/.../bin/python3 script.py`） | Gateway 生命周期守卫把绝对路径当"引用脚本"扫描；uv 的 python3 二进制 17MB 超过 1MB 扫描上限，fail-closed 误判为危险命令拦截（2026-08-03 实测，`python3 -c "print('ok')"` 都被拦） |
-
-**绕过方案（已验证）**：① 把 uv 基础解释器 bin 目录加进 PATH，用裸 `python3` 命令调用（守卫不扫描 PATH 解析的二进制）；② `export PYTHONPATH=~/.hermes/hermes-agent/venv/lib/python3.11/site-packages` 提供 scrapling 等依赖；③ 脚本先 `sed` 去掉头部注释里的 venv 路径再复制到 /tmp 运行。建议封装成 /tmp wrapper shell 脚本统一 export 后调用。
 
 | 方案 | 失败原因 |
 |---|---|

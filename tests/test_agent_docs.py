@@ -99,3 +99,33 @@ class TestSkillAgentAgnostic:
                         f"{os.path.join(root, fn)} 含硬编码路径"
                     assert USER_ABS not in text, \
                         f"{os.path.join(root, fn)} 含用户绝对路径"
+
+
+class TestTimeoutPolicy:
+    """RED 测试：弹窗超时策略 — 绝不默认自动全量；自动推进必须显式配置。"""
+
+    FAV_SKILL = os.path.join(SKILLS_DIR, "favorites-archive", "SKILL.md")
+
+    def test_timeout_waits_for_user_confirmation(self):
+        text = _read(self.FAV_SKILL)
+        assert "停止并等待" in text or "等待用户明确确认" in text, \
+            "超时策略必须为停止并等待用户明确确认"
+        assert "绝不自动全量" in text or "绝不自动" in text, \
+            "必须明确'绝不自动推进全量'"
+
+    def test_auto_proceed_requires_explicit_config(self):
+        text = _read(self.FAV_SKILL)
+        assert "auto_proceed_on_timeout" in text, \
+            "如需超时自动推进必须显式配置 auto_proceed_on_timeout: true"
+
+    def test_no_historical_default_auto_full(self):
+        text = _read(self.FAV_SKILL)
+        assert "按历史惯例推进全量" not in text, \
+            "不得再描述'按历史惯例自动推进全量'的默认行为"
+
+    def test_code_has_no_auto_full_flag(self):
+        """代码层无自动全量参数（默认不自动全量）。"""
+        src = open(os.path.join(REPO_ROOT, "transcribe_archive.py"),
+                   encoding="utf-8").read()
+        assert "auto_proceed" not in src, "代码不应含自动推进参数"
+        assert "number.post" not in src, "代码不应硬编码 number.post 全量逻辑"

@@ -21,8 +21,8 @@
 # ============================================================================
 set -uo pipefail
 
-# --- HOME 兜底（沙箱环境可能改写 HOME，允许用户显式指定真实 HOME） ---
-if [ ! -d "$HOME" ] && [ -n "${REAL_HOME:-}" ]; then
+# --- HOME 兜底（enclave 沙箱可能改写 HOME） ---
+if [ ! -d "$HOME/Desktop" ] && [ -n "${REAL_HOME:-}" ]; then
 	HOME="$REAL_HOME"
 	export HOME
 fi

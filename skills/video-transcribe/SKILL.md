@@ -45,6 +45,15 @@ trigger: 用户发送抖音链接（含 douyin.com、iesdouyin.com、v.douyin.co
 
 ---
 
+## Step 0: Playwright 启动（图文和视频共用）
+
+`douyin_download.py` 基于 Scrapling 已内置浏览器启动逻辑。若需手动写 Playwright 脚本：
+- **Playwright 1.59+ 默认用 `chromium_headless_shell`，安装可能不完整**。必须先用 `find_chromium()` 探测实际路径（`~/Library/Caches/ms-playwright/` 下 `Google Chrome for Testing.app` 或 `Chromium.app`），通过 `executable_path` 参数启动。
+- 不要浪费时间 `playwright install`（经常超时）。若 executable_path 不存在，可创建符号链接指向已装 Chrome，但优先 executable_path。
+- 详见 `references/playwright-chromium-path.md`。
+
+---
+
 ## Step 1: 解析链接 & 判断类型
 
 短链格式 `v.douyin.com/XXXX` 先解析重定向获取真实URL：
@@ -92,15 +101,6 @@ python3（安装 scrapling 的环境） douyin_download.py <视频ID或URL>
 - video元素src可能为空或blob:开头，脚本会自动从 `performance.getEntriesByType('resource')` / response 筛选 `douyinvod.com` 真实资源（**过滤条件只查 `u.includes('douyinvod.com')`，不要加 `mime_type=video_mp4` 参数**——douyinvod URL 不包含此参数）
 - 视频URL有时效性，获取后应立即下载
 - 下载到 `media-video` 文件可能实际只含音频流（无 video stream）——见 Pitfall 13
-
----
-
-## Step 0: Playwright 启动（图文和视频共用）
-
-`douyin_download.py` 基于 Scrapling 已内置浏览器启动逻辑。若需手动写 Playwright 脚本：
-- **Playwright 1.59+ 默认用 `chromium_headless_shell`，安装可能不完整**。必须先用 `find_chromium()` 探测实际路径（`~/Library/Caches/ms-playwright/` 下 `Google Chrome for Testing.app` 或 `Chromium.app`），通过 `executable_path` 参数启动。
-- 不要浪费时间 `playwright install`（经常超时）。若 executable_path 不存在，可创建符号链接指向已装 Chrome，但优先 executable_path。
-- 详见 `references/playwright-chromium-path.md`。
 
 ---
 

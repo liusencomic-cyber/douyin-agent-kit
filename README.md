@@ -95,6 +95,17 @@ ollama pull qwen2.5:7b
 # 转录模型（首次运行自动下载 ~1.6GB 到 ~/.cache/huggingface）
 ```
 
+## 安全说明
+
+- **不得提交真实 Cookie/凭据** —— `config/cookies.json`、`douyin-downloader/config*.yml`
+  含登录敏感状态，已在 `.gitignore` 中。
+- **批量下载有平台风控**（滑块/限流/Cookie 失效）。遵守账号安全铁律：只读自己收藏、
+  低频增量、单线程、同 IP、遇风控立即停。
+- **提示注入已加固** —— 判断 prompt 声明转录文本是数据而非指令；疑似注入/拒绝回复
+  降级为 `judge_failed`。
+- **工作目录清理有安全边界** —— `transcribe_single.py` 拒绝删除 `/`、`~`、仓库根，
+  仅清理仓库内或 /tmp 下 douyin/tmp 前缀目录。
+
 ## 已知限制
 
 - 转录引擎当前实现 `mlx-whisper`（Apple Silicon）；`faster-whisper` / `whisper.cpp` /

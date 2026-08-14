@@ -4,7 +4,16 @@
 与 get_asr()/get_vision() 访问器、select_asr_engine() 分发点。
 """
 import json
+import os
 import pytest
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _load_schema():
+    with open(os.path.join(REPO_ROOT, "config.schema.json"),
+              encoding="utf-8") as f:
+        return json.load(f)
 
 
 @pytest.fixture()
@@ -65,6 +74,22 @@ class TestLoadConfig:
         cfg2 = dy_config.load_config(str(config_path))
         assert cfg2["asr"]["provider"] == "mlx-whisper", \
             "多次 load 不应共享同一份默认字典"
+
+
+class TestSchemaId:
+    """P3-1: config.schema.json 的 $id 不得用 example.com 占位。"""
+
+    def test_schema_id_not_example_com(self):
+        schema = _load_schema()
+        assert "example.com" not in schema.get("$id", ""), \
+            "$id 不应使用 example.com 占位"
+        assert schema.get("$id", "").startswith(
+            "https://github.com/liusencomic-cyber/douyin-agent-kit/"), \
+            f"$id 应指向项目仓库，实际: {schema.get('$id')}"
+
+    def test_schema_remains_valid_json(self):
+        schema = _load_schema()
+        assert isinstance(schema, dict) and "$id" in schema
 
 
 class TestNaming:

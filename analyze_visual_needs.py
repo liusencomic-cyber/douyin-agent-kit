@@ -195,7 +195,7 @@ def _sanitize_json(text):
         import json5
         json5.loads(text)  # 仅验证可解析
         return text
-    except (ImportError, Exception):
+    except Exception:
         pass
 
     # 无法修复，返回原文（调用方会捕获 JSONDecodeError）

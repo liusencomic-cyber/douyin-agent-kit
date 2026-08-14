@@ -5,8 +5,6 @@
   （⚠️ 必须用安装了 scrapling 的 Python 运行：pip install scrapling）
 
 支持:
-
-支持:
   - 视频类型 (/video/): 下载mp4视频
   - 图文类型 (/note/): 下载图片(webp/jpeg) + 页面文本
 

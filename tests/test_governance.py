@@ -99,3 +99,18 @@ class TestGovernanceFiles:
                    and u.get("schedule", {}).get("interval") == "weekly"
                    for u in updates), \
             "dependabot 应配置 pip 依赖每周检查"
+
+
+class TestPythonVersionConsistency:
+    """P3-4: requirements.txt / README.en.md 版本表述与 CI matrix 3.10-3.13 一致。"""
+
+    def test_requirements_comment_matches_ci_matrix(self):
+        text = _read(os.path.join(REPO_ROOT, "requirements.txt"))
+        first = text.splitlines()[0]
+        assert "3.10" in first and "3.13" in first, \
+            f"requirements.txt 首行注释应与 CI matrix 一致，实际: {first}"
+        assert "3.14" not in first, "不应声称依赖面向 Python 3.14"
+
+    def test_readme_en_version_consistent(self):
+        text = _read(os.path.join(REPO_ROOT, "README.en.md"))
+        assert "3.14" not in text, "README.en.md 不应声称开发于 Python 3.14"

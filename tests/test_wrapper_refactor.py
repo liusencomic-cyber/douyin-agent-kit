@@ -160,3 +160,9 @@ class TestDouyinDownloadProxy:
         assert "DOUYIN_PROXY" in content or "HTTPS_PROXY" in content, (
             f"douyin_download.py 应从环境变量读取代理\n内容:\n{content[:300]}"
         )
+
+    def test_docstring_no_duplicate_support_line(self):
+        """P3-7: docstring 中「支持:」行不得重复（第 7-9 行）。"""
+        content = self.DOUYIN_DOWNLOAD.read_text(encoding="utf-8")
+        lines = [l.strip() for l in content.splitlines()]
+        assert lines.count("支持:") == 1, "「支持:」行重复出现"

@@ -65,6 +65,8 @@ def main():
     ap.add_argument("--src-dir", required=True, help="作品目录（含日期_标题_id 子文件夹）")
     ap.add_argument("--out", required=True, help="汇总转录文本输出路径")
     ap.add_argument("--processed", required=True, help="已处理 ID 记录 json")
+    ap.add_argument("--append", action="store_true",
+                    help="追加写 --out（默认覆盖写，防跨运行残留）")
     args = ap.parse_args()
 
     processed_path = args.processed
@@ -111,7 +113,7 @@ def main():
     ensure_asr_engine_supported()  # 非 mlx-whisper 的 provider 明确报错（接口预留）
 
     ok, fail = 0, 0
-    with open(args.out, "a", encoding="utf-8") as out:
+    with open(args.out, "a" if args.append else "w", encoding="utf-8") as out:
         for i, (date, title, aweme_id, mp4, meta) in enumerate(items, 1):
             try:
                 transcript = ""

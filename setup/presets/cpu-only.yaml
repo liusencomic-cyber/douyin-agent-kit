@@ -1,0 +1,25 @@
+# 预设：CPU only（无 GPU）— whisper.cpp / faster-whisper
+# 注意：faster-whisper / whisper.cpp 为接口预留，本仓库尚未完整实现。
+# 由设置向导按机器类型加载后用户可微调。
+agent: generic
+asr:
+  provider: faster-whisper
+  model: base
+  language: zh
+  offline: true
+  external_command: ""
+vision:
+  judge_provider: ollama
+  judge_model: qwen2.5:7b
+  ollama_url: http://127.0.0.1:11434
+  ocr_provider: agent-vision
+  fallback_ocr: tesseract
+  max_chars: 6000
+  verify_rounds: 2
+archive:
+  enabled: true
+  vault_inbox: ""
+features:
+  single_extract: true
+  favorites_sync: false
+  creator_distill: false

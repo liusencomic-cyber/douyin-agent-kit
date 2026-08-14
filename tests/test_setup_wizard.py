@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO_ROOT)  # 确保仓库根优先（避免 setup 顶层模块与 PYTHONPATH 冲突）
 WIZARD = os.path.join(REPO_ROOT, "setup", "setup_douyin_skills.py")
 
 

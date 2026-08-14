@@ -6,6 +6,10 @@ import os
 import sys
 import pytest
 
+# 确保仓库根优先于被 PYTHONPATH 污染的路径（避免 setup 顶层模块冲突）
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO_ROOT)
+
 
 def make_check(name, status, detail=""):
     return (name, status, detail)

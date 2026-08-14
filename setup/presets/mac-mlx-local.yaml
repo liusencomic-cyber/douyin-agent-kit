@@ -1,0 +1,24 @@
+# 预设：Apple Silicon（M1+）本机 — mlx-whisper GPU（Metal）
+# 由设置向导按机器类型加载后用户可微调。
+agent: generic
+asr:
+  provider: mlx-whisper
+  model: mlx-community/whisper-large-v3-turbo
+  language: zh
+  offline: true
+  external_command: ""
+vision:
+  judge_provider: ollama
+  judge_model: qwen2.5:7b
+  ollama_url: http://127.0.0.1:11434
+  ocr_provider: agent-vision
+  fallback_ocr: tesseract
+  max_chars: 6000
+  verify_rounds: 2
+archive:
+  enabled: true
+  vault_inbox: ""
+features:
+  single_extract: true
+  favorites_sync: false
+  creator_distill: false

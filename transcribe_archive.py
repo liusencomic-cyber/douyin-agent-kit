@@ -12,7 +12,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from scripts.asr_utils import ensure_asr_engine_supported
+from scripts.asr_utils import ensure_asr_engine_supported, select_asr_engine
 from scripts.format_utils import segments_to_timestamps
 
 # 可移植工作目录：优先环境变量 DOUYIN_SYNC_DIR，否则推断为脚本所在目录（仓库根）。

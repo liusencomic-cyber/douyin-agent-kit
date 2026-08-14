@@ -10,3 +10,7 @@ archive_config.json
 config/cookies.json
 .reasonix/
 Downloaded/
+
+# 设置向导生成的用户配置（不入库）
+douyin_skills.config.yaml
+AGENT_SETUP.md

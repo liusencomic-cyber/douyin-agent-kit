@@ -1,5 +1,7 @@
 # douyin-agent-kit
 
+> **[中文](README.md) | [English](README.en.md)**
+
 抖音内容提取与博主蒸馏的 **Agent 无关** 技能集：**GPU 转录 + 智能画面判断 + 定向截帧 + 博主蒸馏报告**。
 适配 Hermes / OpenClaw / WorkBuddy / Claude Code / Codex / 任意本地 Agent —— 不绑定任何单一 Agent。
 

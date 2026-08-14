@@ -1,0 +1,71 @@
+name: Bug Report
+description: 报告一个缺陷（请先搜索已有 Issue 避免重复）
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 感谢报告缺陷
+        请尽量提供完整信息，缺失字段会拖慢定位。私密/敏感信息（含 Cookie 类凭据）请走
+        [Security Advisory](https://docs.github.com/zh/code-security/security-advisories)
+        而非公开 Issue。
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / commit
+      description: 你使用的版本号或 git commit（`git rev-parse HEAD`）
+      placeholder: "0.1.0 / abc1234"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 运行环境
+      description: 操作系统与 Python 版本
+      options:
+        - macOS（Apple Silicon）+ Python 3.14
+        - macOS（Intel）+ Python 3.13
+        - Linux + Python 3.13
+        - Linux + Python 3.12
+        - Windows + Python 3.13
+        - 其他
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 最小可复现步骤（命令/脚本）
+      placeholder: |
+        1. python3 setup/setup_douyin_agent_kit.py ...
+        2. python3 transcribe_single.py --mp4 ...
+        3. 观察 ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 你期望发生什么
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 实际发生了什么（含错误输出/回溯）
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 输出
+      description: 相关日志、配置脱敏后的片段（**请删除 Cookie 与绝对路径**）
+      render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充说明
+      description: 其他有助于定位的信息（网络环境、代理、依赖版本等）

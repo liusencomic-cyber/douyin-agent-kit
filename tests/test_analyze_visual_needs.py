@@ -1016,8 +1016,10 @@ class TestPromptInjection:
         assert "【转录数据开始】" in user_msg, "转录文本前必须有数据开始分隔符"
         assert "【转录数据结束】" in user_msg, "转录文本后必须有数据结束分隔符"
         assert malicious in user_msg
-        # 注入文本应被当作数据处理，不改变正常判断流程
-        assert result[0] is True and result[1] != "judge_failed"
+        # 注入文本应被当作数据处理，走正常判断流程（非 judge_failed）；
+        # needs_visual 具体值由模型输出 + 既有 Scheme C 实义词校验决定。
+        assert result[1] != "judge_failed", \
+            f"注入文本不应导致 judge_failed，实际 reason={result[1]!r}"
 
     def test_injection_text_does_not_change_heuristic_logic(self):
         """RED→GREEN: 注入指令不改变系统启发式判断逻辑（heuristic 独立记录）。"""

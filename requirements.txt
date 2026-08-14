@@ -5,6 +5,12 @@ filelock
 scipy
 packaging
 json5
+pyyaml            # 配置 douyin_skills.config.yaml 解析（scripts/dy_config.py）
 
 # 可选：测试
 pytest
+
+# 可选：本地 OCR 兜底（vision.fallback_ocr=tesseract 时需要；系统包，非 pip）
+#   macOS:  brew install tesseract
+#   Debian/Ubuntu:  apt install tesseract-ocr
+#   Windows:  安装 UB-Mannheim/tesseract 后加入 PATH

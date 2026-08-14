@@ -1,0 +1,78 @@
+# ============================================================
+# douyin-skills 统一配置文件（示例）
+# 复制为 douyin_skills.config.yaml 后按需修改；
+# 或直接运行设置向导自动生成:
+#   python setup/setup_douyin_skills.py
+# ============================================================
+
+# ── Agent 类型 ─────────────────────────────────────────────
+# 你交给本地 Agent 的类型，用于生成专属接入说明（AGENT_SETUP.md）。
+# 可选: hermes / openclaw / workbuddy / claude-code / codex / generic
+# generic = 任意本地 Agent（无特定工具绑定）
+agent: generic
+
+# ── 语音转文字（ASR）── 本地语音模型可配置开口 ──────────────
+asr:
+  # 转录引擎。可选:
+  #   mlx-whisper     Apple Silicon GPU（Metal），本仓库当前已实现
+  #   faster-whisper  CPU/GPU 通用（接口预留，未完整实现）
+  #   whisper.cpp     通用 C++ 推理（接口预留）
+  #   external-command 调用外部命令（接口预留，external_command 填模板）
+  #   none            不转录（仅下载/归档元数据）
+  provider: mlx-whisper
+
+  # 模型名（mlx-whisper 用 HuggingFace repo 或本地路径）
+  model: mlx-community/whisper-large-v3-turbo
+
+  # 转录语言（zh = 中文）
+  language: zh
+
+  # 强制离线：模型已本地缓存时避免联网被墙挂死
+  offline: true
+
+  # external-command provider 的命令模板（预留，如 "whisper {input} -o {output}"）
+  external_command: ""
+
+# ── 视觉（Vision / OCR）── 视觉模型可配置开口 ───────────────
+vision:
+  # 画面需求语义判断 LLM 服务。可选: ollama / openai-compatible / none
+  judge_provider: ollama
+
+  # 判断用模型名（ollama 需先 ollama pull）
+  judge_model: qwen2.5:7b
+
+  # Ollama API 地址（本地默认）
+  ollama_url: http://127.0.0.1:11434
+
+  # 画面/图片 OCR 方案。可选:
+  #   agent-vision      由接入的 Agent 提供视觉能力（推荐；如你的 Agent
+  #                     无此能力，会走 fallback_ocr）
+  #   tesseract         本地 Tesseract OCR（跨平台，需安装 tesseract）
+  #   paddleocr         百度 PaddleOCR（接口预留）
+  #   qwen-vl           通义千问视觉模型（接口预留）
+  #   gemini            Google Gemini（接口预留，需网络）
+  #   openai-compatible 任意 OpenAI 兼容视觉 API（接口预留）
+  #   none              不做 OCR
+  ocr_provider: agent-vision
+
+  # Agent 无视觉能力时的本地 OCR 兜底
+  fallback_ocr: tesseract
+
+  # 语义判断输入最大字符数（0 = 不限制）
+  max_chars: 6000
+
+  # 最大验证轮数（≥2 时对启发式命中/低置信度结果做双重确认）
+  verify_rounds: 2
+
+# ── Obsidian 归档 ──────────────────────────────────────────
+archive:
+  # 是否启用归档到 Obsidian Vault
+  enabled: true
+  # Vault 收件箱路径（启用归档时必填；留空则跳过归档仅转录）
+  vault_inbox: ""
+
+# ── 功能开关（供 Agent 决定加载哪些技能）────────────────────
+features:
+  single_extract: true      # 单条链接提取技能（视频/图文 → 转录 → 判断 → 归档）
+  favorites_sync: false     # 收藏列表批量同步（需本人 Cookie，谨慎开启）
+  creator_distill: false    # 博主全量蒸馏（需评估风控）

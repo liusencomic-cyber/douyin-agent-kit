@@ -6,6 +6,30 @@ import argparse, json, os, re, subprocess, sys, tempfile
 
 WHISPER_MODEL = "mlx-community/whisper-large-v3-turbo"
 
+
+def select_asr_engine():
+    """ASR 引擎分发点：返回当前 provider 名（来自 douyin_skills.config.yaml）。
+
+    配置不可读/未配置时回落默认 mlx-whisper。其他 provider 为接口预留。
+    """
+    try:
+        from scripts.dy_config import load_config, get_asr
+        return get_asr(load_config()).get("provider", "mlx-whisper")
+    except Exception:
+        return "mlx-whisper"
+
+
+def ensure_asr_engine_supported():
+    """校验当前 ASR provider 已实现；未实现时抛 NotImplementedError 明确提示。"""
+    engine = select_asr_engine()
+    if engine != "mlx-whisper":
+        raise NotImplementedError(
+            f"ASR provider '{engine}' 尚未实现完整转录：当前仅支持 mlx-whisper。\n"
+            f"可在 douyin_skills.config.yaml 的 asr.provider 选择: "
+            f"mlx-whisper / faster-whisper / whisper.cpp / external-command / none"
+        )
+    return engine
+
 def log(msg):
     print(msg, flush=True)
 
@@ -84,6 +108,7 @@ def main():
     import mlx_whisper
     log("加载 Whisper 模型（首次较慢，mlx-whisper GPU/Metal）...")
     # mlx_whisper.transcribe 内部按 path_or_hf_repo 缓存模型，重复调用不重载
+    ensure_asr_engine_supported()  # 非 mlx-whisper 的 provider 明确报错（接口预留）
 
     ok, fail = 0, 0
     with open(args.out, "a", encoding="utf-8") as out:

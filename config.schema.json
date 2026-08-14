@@ -1,0 +1,93 @@
+# douyin_skills.config.yaml 结构定义（JSON Schema draft-07）
+# 供外部工具校验；运行时校验由 scripts/dy_config.py 内置逻辑完成（纯 stdlib）。
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/douyin-skills/config.schema.json",
+  "title": "douyin-skills 统一配置",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "agent": {
+      "type": "string",
+      "enum": ["hermes", "openclaw", "workbuddy", "claude-code", "codex", "generic"],
+      "default": "generic",
+      "description": "接入的 Agent 类型（generic 表示任意本地 Agent）"
+    },
+    "asr": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["mlx-whisper", "faster-whisper", "whisper.cpp", "external-command", "none"],
+          "default": "mlx-whisper",
+          "description": "语音转文字引擎；当前已实现 mlx-whisper，其余为接口预留"
+        },
+        "model": {
+          "type": "string",
+          "default": "mlx-community/whisper-large-v3-turbo",
+          "description": "ASR 模型名（HuggingFace repo 或本地路径，取决于 provider）"
+        },
+        "language": {"type": "string", "default": "zh", "description": "转录语言"},
+        "offline": {"type": "boolean", "default": true, "description": "强制离线（HF_HUB_OFFLINE=1）"},
+        "external_command": {
+          "type": "string",
+          "default": "",
+          "description": "external-command provider 时调用的命令行模板（预留）"
+        }
+      }
+    },
+    "vision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "judge_provider": {
+          "type": "string",
+          "enum": ["ollama", "openai-compatible", "none"],
+          "default": "ollama",
+          "description": "画面需求语义判断的 LLM 服务"
+        },
+        "judge_model": {
+          "type": "string",
+          "default": "qwen2.5:7b",
+          "description": "判断用模型名"
+        },
+        "ollama_url": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434",
+          "description": "Ollama API 地址"
+        },
+        "ocr_provider": {
+          "type": "string",
+          "enum": ["agent-vision", "tesseract", "paddleocr", "qwen-vl", "gemini", "openai-compatible", "none"],
+          "default": "agent-vision",
+          "description": "画面/图片 OCR 方案（agent-vision 由接入的 Agent 提供视觉能力）"
+        },
+        "fallback_ocr": {
+          "type": "string",
+          "default": "tesseract",
+          "description": "Agent 无视觉能力时的本地 OCR 兜底（tesseract）"
+        },
+        "max_chars": {"type": "integer", "default": 6000, "description": "判断输入最大字符数（0=不限）"},
+        "verify_rounds": {"type": "integer", "default": 2, "description": "最大验证轮数（双重确认）"}
+      }
+    },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vault_inbox": {"type": "string", "description": "Obsidian Vault 收件箱路径"},
+        "enabled": {"type": "boolean", "default": true, "description": "是否启用归档"}
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "single_extract": {"type": "boolean", "default": true, "description": "单条链接提取技能"},
+        "favorites_sync": {"type": "boolean", "default": false, "description": "收藏批量同步技能"},
+        "creator_distill": {"type": "boolean", "default": false, "description": "博主蒸馏技能"}
+      }
+    }
+  }
+}

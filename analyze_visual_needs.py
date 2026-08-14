@@ -441,17 +441,38 @@ def judge_visual_needs(title, segments_text, model, ollama_url, max_retries=2,
 
 
 def main():
+    # 未显式传参的默认值优先从统一配置读取（scripts/dy_config.py）
+    vision_defaults = {}
+    try:
+        from scripts.dy_config import load_config, get_vision
+        vision_cfg = get_vision(load_config())
+        vision_defaults = {
+            "judge_model": vision_cfg.get("judge_model", "qwen2.5:7b"),
+            "ollama_url": vision_cfg.get("ollama_url", "http://127.0.0.1:11434"),
+            "max_chars": vision_cfg.get("max_chars", 6000),
+            "verify_rounds": vision_cfg.get("verify_rounds", 2),
+        }
+    except Exception:
+        # 配置不可读时回落命令行默认值
+        pass
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", required=True, help="转录汇总文本路径")
     ap.add_argument("--out", required=True, help="输出 JSON 路径")
-    ap.add_argument("--model", default="qwen2.5:7b", help="Ollama 模型名")
-    ap.add_argument("--ollama-url", default="http://127.0.0.1:11434", help="Ollama API 地址")
+    ap.add_argument("--model", default=None, help="Ollama 模型名（默认取配置 vision.judge_model）")
+    ap.add_argument("--ollama-url", default=None, help="Ollama API 地址（默认取配置 vision.ollama_url）")
     ap.add_argument("--max-items", type=int, default=0, help="最多处理条数（0=不限）")
-    ap.add_argument("--verify-rounds", type=int, default=2,
-                    help="最大验证轮数（默认2；启发式命中/低置信度时启用二次确认）")
-    ap.add_argument("--max-chars", type=int, default=6000,
-                    help="输入最大字符数（超出截断保留前段，0=不限制，默认6000）")
+    ap.add_argument("--verify-rounds", type=int, default=None,
+                    help="最大验证轮数（默认取配置 vision.verify_rounds）")
+    ap.add_argument("--max-chars", type=int, default=None,
+                    help="输入最大字符数（超出截断保留前段，0=不限制，默认取配置 vision.max_chars）")
     args = ap.parse_args()
+
+    # 显式传参优先；未传则用配置值；再回落内置默认
+    args.model = args.model or vision_defaults.get("judge_model", "qwen2.5:7b")
+    args.ollama_url = args.ollama_url or vision_defaults.get("ollama_url", "http://127.0.0.1:11434")
+    args.max_chars = args.max_chars if args.max_chars is not None else vision_defaults.get("max_chars", 6000)
+    args.verify_rounds = args.verify_rounds if args.verify_rounds is not None else vision_defaults.get("verify_rounds", 2)
 
     items = parse_transcript_file(args.src)
     if args.max_items and args.max_items > 0:

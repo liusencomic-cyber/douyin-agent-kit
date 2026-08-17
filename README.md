@@ -20,7 +20,7 @@
 | **博主蒸馏** | 全量转录 → 观点浓缩（滑动窗口法）→ 生成七段式报告 |
 | **风控保护** | 启动前自动检查残留进程、并发下载器、模型缓存、Ollama 状态 |
 | **适配任意 Agent** | 不依赖某个 Agent 专属的工具名或路径，通过六项能力契约对接 |
-| **模型可配置** | ASR 五档、画面判断三档、OCR 七档，设置向导一键选择 |
+| **模型可配置** | 当前可用：mlx-whisper（转录）+ 本地 Ollama（判断）+ agent-vision/tesseract（OCR）；其余 provider（faster-whisper、whisper.cpp、paddleocr 等）为接口预留，调用时报 `NotImplementedError` 不假装支持 |
 
 ## 快速开始（4 步）
 

@@ -84,7 +84,7 @@ class TestSchemaId:
         assert "example.com" not in schema.get("$id", ""), \
             "$id 不应使用 example.com 占位"
         assert schema.get("$id", "").startswith(
-            "https://github.com/liusencomic-cyber/douyin-agent-kit/"), \
+            "https://github.com/senlib/douyin-agent-kit/"), \
             f"$id 应指向项目仓库，实际: {schema.get('$id')}"
 
     def test_schema_remains_valid_json(self):

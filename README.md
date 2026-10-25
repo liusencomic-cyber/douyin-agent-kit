@@ -27,7 +27,7 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/liusencomic-cyber/douyin-agent-kit
+git clone https://github.com/senlib/douyin-agent-kit
 cd douyin-agent-kit
 ```
 
